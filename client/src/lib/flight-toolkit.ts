@@ -48,6 +48,8 @@ export function powerBudget(voltageV: number, averageCurrentA: number, peakCurre
   };
 }
 
+export type ReadinessReason = { id: "power" | "sag" | "thrust" | "checklist"; state: "pass" | "warn" | "hold"; label: string; status: "PASS" | "REVIEW" | "LOCKED"; detail: string; action: string; points: number; maxPoints: number };
+
 export type MissionReadinessInput = {
   voltageNominal: number;
   batteryContinuousA: number;
@@ -72,10 +74,30 @@ export function missionReadiness(input: MissionReadinessInput) {
     thrust: thrust.totalThrustG > 0 && thrust.ratio !== null && thrust.ratio >= 2 ? 25 : thrust.totalThrustG > 0 && thrust.ratio !== null ? 12 : 0,
     checklist: Math.round(checksRatio * 30),
   };
+  const reasons: ReadinessReason[] = [
+    power.continuousHeadroomA > 0
+      ? { id: "power", state: "pass", label: "Power headroom", status: "PASS", detail: `${power.continuousHeadroomA.toFixed(1)} A remains below the entered battery limit.`, action: "No power gate is active.", points: factors.power, maxPoints: 25 }
+      : power.continuousHeadroomA === 0
+        ? { id: "power", state: "warn", label: "Power headroom", status: "REVIEW", detail: "Peak current reaches the entered continuous battery limit with no margin.", action: "Reduce the expected peak load or use a pack with more continuous headroom.", points: factors.power, maxPoints: 25 }
+        : { id: "power", state: "hold", label: "Power headroom", status: "LOCKED", detail: `${Math.abs(power.continuousHeadroomA).toFixed(1)} A over the entered continuous battery limit.`, action: "Correct the battery/current inputs before relying on this build.", points: factors.power, maxPoints: 25 },
+    sag.sagV <= 2
+      ? { id: "sag", state: "pass", label: "Voltage sag", status: "PASS", detail: `${sag.sagV.toFixed(2)} V modeled sag is inside the ≤ 2.00 V target.`, action: "Keep the resistance measurement method consistent.", points: factors.sag, maxPoints: 20 }
+      : sag.sagV <= 3
+        ? { id: "sag", state: "warn", label: "Voltage sag", status: "REVIEW", detail: `${sag.sagV.toFixed(2)} V modeled sag is above 2.00 V and inside the 3.00 V review band.`, action: "Repeat the pack resistance measurement under comparable conditions.", points: factors.sag, maxPoints: 20 }
+        : { id: "sag", state: "hold", label: "Voltage sag", status: "LOCKED", detail: `${sag.sagV.toFixed(2)} V modeled sag exceeds the 3.00 V review ceiling.`, action: "Inspect the pack, connector, wiring, and measurement before arm.", points: factors.sag, maxPoints: 20 },
+    thrust.totalThrustG <= 0
+      ? { id: "thrust", state: "hold", label: "Thrust evidence", status: "LOCKED", detail: "No measured static thrust has been supplied; the engine will not guess it.", action: "Enter a repeatable measured thrust-per-motor value.", points: factors.thrust, maxPoints: 25 }
+      : thrust.ratio !== null && thrust.ratio >= 2
+        ? { id: "thrust", state: "pass", label: "Thrust evidence", status: "PASS", detail: `${thrust.ratio.toFixed(2)} : 1 measured thrust-to-weight ratio meets the ≥ 2.00 : 1 target.`, action: "Confirm the test setup represents the actual build.", points: factors.thrust, maxPoints: 25 }
+        : { id: "thrust", state: "warn", label: "Thrust evidence", status: "REVIEW", detail: `${thrust.ratio?.toFixed(2) ?? "—"} : 1 measured ratio is below the ≥ 2.00 : 1 target.`, action: "Review weight, prop/motor setup, and test method before arm.", points: factors.thrust, maxPoints: 25 },
+    checksRatio >= 1
+      ? { id: "checklist", state: "pass", label: "Field checklist", status: "PASS", detail: `${input.checksComplete}/${input.checksTotal} checks are marked complete.`, action: "Keep the checklist current for each session.", points: factors.checklist, maxPoints: 30 }
+      : { id: "checklist", state: "hold", label: "Field checklist", status: "LOCKED", detail: `${Math.max(0, input.checksComplete)}/${Math.max(0, input.checksTotal)} checks are complete; all listed checks are required.`, action: "Complete every pre-flight check before treating the score as field-ready.", points: factors.checklist, maxPoints: 30 },
+  ];
   const score = Math.min(100, factors.power + factors.sag + factors.thrust + factors.checklist);
   const evidenceIncomplete = thrust.totalThrustG <= 0 || checksRatio < 1;
   const verdict = evidenceIncomplete ? "HOLD — INPUTS INCOMPLETE" : score >= 85 ? "READY FOR FIELD CHECK" : score >= 60 ? "REVIEW BEFORE ARM" : "HOLD — INPUTS INCOMPLETE";
-  return { score, verdict, factors, power, sag, thrust };
+  return { score, verdict, factors, power, sag, thrust, reasons };
 }
 
 export type ReadinessItem = { id: string; label: string; hint: string };

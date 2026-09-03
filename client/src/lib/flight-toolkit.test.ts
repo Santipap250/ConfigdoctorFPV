@@ -50,6 +50,13 @@ describe("flight toolkit domain", () => {
     expect(result.verdict).toBe("REVIEW BEFORE ARM");
   });
 
+  it("returns an explainable reason for every readiness signal", () => {
+    const result = missionReadiness({ voltageNominal: 22.2, batteryContinuousA: 130, averageCurrentA: 28, peakCurrentA: 120, packResistanceMilliOhm: 18, thrustPerMotorG: 0, motorCount: 4, weightG: 720, checksComplete: 0, checksTotal: 10 });
+    expect(result.reasons).toHaveLength(4);
+    expect(result.reasons.find((reason) => reason.id === "thrust")?.status).toBe("LOCKED");
+    expect(result.reasons.every((reason) => reason.detail.length > 0 && reason.action.length > 0)).toBe(true);
+  });
+
   it("compares config text line-by-line", () => {
     const result = diffConfigText("a\nb\nc", "a\nx\nc\nd");
     expect(result.changed).toBe(2);
