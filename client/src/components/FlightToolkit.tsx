@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { BatteryCharging, CheckCircle2, ClipboardCheck, Gauge, GitCompare, Power, ShieldCheck, TriangleAlert, Zap } from "lucide-react";
-import { batteryPlanner, batterySag, diffConfigText, powerBudget, preflightItems, thrustBudget } from "@/lib/flight-toolkit";
+import { ArrowRight, BatteryCharging, CheckCircle2, ClipboardCheck, Gauge, GitCompare, Power, ShieldCheck, Target, TriangleAlert, Zap } from "lucide-react";
+import { batteryPlanner, batterySag, diffConfigText, missionReadiness, powerBudget, preflightItems, thrustBudget } from "@/lib/flight-toolkit";
 import type { DroneProfile } from "@/lib/drone";
 
 const num = (value: string) => Number(value) || 0;
@@ -8,10 +8,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 
 type Props = { profile: DroneProfile; voltageNominal: number; batteryContinuousA: number };
 
-type Tab = "power" | "sag" | "thrust" | "preflight" | "diff";
+type Tab = "readiness" | "power" | "sag" | "thrust" | "preflight" | "diff";
 
 export function FlightToolkit({ profile, voltageNominal, batteryContinuousA }: Props) {
-  const [tab, setTab] = useState<Tab>("power");
+  const [tab, setTab] = useState<Tab>("readiness");
   return (
     <section className="flight-toolkit">
       <header className="flight-toolkit__head">
@@ -23,6 +23,7 @@ export function FlightToolkit({ profile, voltageNominal, batteryContinuousA }: P
         <div className="flight-toolkit__badge"><Zap size={15} /> LOCAL / NO ACCOUNT</div>
       </header>
       <nav className="toolkit-tabs" aria-label="Flight toolkit">
+        <TabButton active={tab === "readiness"} icon={<Target size={16} />} label="MISSION READINESS" onClick={() => setTab("readiness")} />
         <TabButton active={tab === "power"} icon={<Power size={16} />} label="POWER BUDGET" onClick={() => setTab("power")} />
         <TabButton active={tab === "sag"} icon={<BatteryCharging size={16} />} label="SAG CHECK" onClick={() => setTab("sag")} />
         <TabButton active={tab === "thrust"} icon={<Gauge size={16} />} label="THRUST MARGIN" onClick={() => setTab("thrust")} />
@@ -30,6 +31,7 @@ export function FlightToolkit({ profile, voltageNominal, batteryContinuousA }: P
         <TabButton active={tab === "diff"} icon={<GitCompare size={16} />} label="CONFIG DIFF" onClick={() => setTab("diff")} />
       </nav>
       <div className="toolkit-panel">
+        {tab === "readiness" && <MissionReadinessTool profile={profile} voltageNominal={voltageNominal} batteryContinuousA={batteryContinuousA} />}
         {tab === "power" && <PowerTool profile={profile} voltageNominal={voltageNominal} batteryContinuousA={batteryContinuousA} />}
         {tab === "sag" && <SagTool profile={profile} />}
         {tab === "thrust" && <ThrustTool profile={profile} />}
@@ -42,6 +44,32 @@ export function FlightToolkit({ profile, voltageNominal, batteryContinuousA }: P
 
 function TabButton({ active, icon, label, onClick }: { active: boolean; icon: ReactNode; label: string; onClick: () => void }) {
   return <button className={`toolkit-tab ${active ? "is-active" : ""}`} onClick={onClick}>{icon}<span>{label}</span></button>;
+}
+
+function MissionReadinessTool({ profile, voltageNominal, batteryContinuousA }: Props) {
+  const [resistance, setResistance] = useState(18);
+  const [thrust, setThrust] = useState(profile.measuredThrustPerMotorG);
+  const [checked, setChecked] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem("obix-preflight") || "{}"); } catch { return {}; }
+  });
+  const checksComplete = preflightItems.filter((item) => checked[item.id]).length;
+  const result = missionReadiness({ voltageNominal, batteryContinuousA, averageCurrentA: profile.estimatedAverageCurrentA, peakCurrentA: profile.expectedPeakCurrentA, packResistanceMilliOhm: resistance, thrustPerMotorG: thrust, motorCount: 4, weightG: profile.weightG, checksComplete, checksTotal: preflightItems.length });
+  const tone = result.score >= 85 ? "good" : result.score >= 60 ? "warn" : "bad";
+  return <div className="readiness-tool">
+    <div className="readiness-hero">
+      <div><span className="panel-label">FLAGSHIP / FIELD DECISION</span><strong>{result.verdict}</strong><p>One conservative score from electrical headroom, measured sag, thrust evidence, and your persistent pre-flight checklist.</p></div>
+      <div className={`readiness-score ${tone}`}><b>{result.score}</b><small>/100</small></div>
+    </div>
+    <div className="readiness-grid">
+      <div className="readiness-inputs"><div className="panel-label">LIVE SIGNAL INPUTS</div><NumberField label="Pack resistance" value={resistance} unit="mΩ" onChange={setResistance} /><NumberField label="Static thrust / motor" value={thrust} unit="g" onChange={setThrust} /><div className="readiness-hint"><ShieldCheck size={15} /> Inputs stay local and missing thrust data never gets guessed.</div></div>
+      <div className="readiness-breakdown"><div className="panel-label">READINESS BREAKDOWN</div><ReadinessBar label="Power headroom" value={result.factors.power} max={25} detail={`${result.power.continuousHeadroomA.toFixed(1)} A`} /><ReadinessBar label="Voltage sag" value={result.factors.sag} max={20} detail={`${result.sag.sagV.toFixed(2)} V`} /><ReadinessBar label="Thrust evidence" value={result.factors.thrust} max={25} detail={result.thrust.ratio === null ? "not supplied" : `${result.thrust.ratio.toFixed(2)} : 1`} /><ReadinessBar label="Field checklist" value={result.factors.checklist} max={30} detail={`${checksComplete}/${preflightItems.length}`} /></div>
+    </div>
+    <div className="readiness-footer"><span><Target size={15} /> Conservative by design</span><small>Green means the inputs are ready for a field check — not a certification of airworthiness.</small><button onClick={() => setChecked(Object.fromEntries(preflightItems.map((item) => [item.id, true])))}>Mark checklist complete <ArrowRight size={13} /></button></div>
+  </div>;
+}
+
+function ReadinessBar({ label, value, max, detail }: { label: string; value: number; max: number; detail: string }) {
+  return <div className="readiness-bar"><div><span>{label}</span><b>{detail}</b></div><div className="readiness-track"><i style={{ width: `${Math.round((value / max) * 100)}%` }} /></div></div>;
 }
 
 function PowerTool({ profile, voltageNominal, batteryContinuousA }: Props) {

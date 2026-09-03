@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { batteryPlanner, batterySag, diffConfigText, powerBudget, preflightItems, thrustBudget } from "./flight-toolkit";
+import { batteryPlanner, batterySag, diffConfigText, missionReadiness, powerBudget, preflightItems, thrustBudget } from "./flight-toolkit";
 
 describe("flight toolkit domain", () => {
   it("computes conservative battery planning values", () => {
@@ -25,6 +25,12 @@ describe("flight toolkit domain", () => {
     expect(result.averagePowerW).toBeCloseTo(621.6, 3);
     expect(result.peakPowerW).toBeCloseTo(2664, 3);
     expect(result.continuousHeadroomA).toBeCloseTo(10, 3);
+  });
+
+  it("combines measurable signals into a conservative readiness score", () => {
+    const result = missionReadiness({ voltageNominal: 22.2, batteryContinuousA: 130, averageCurrentA: 28, peakCurrentA: 120, packResistanceMilliOhm: 12, thrustPerMotorG: 900, motorCount: 4, weightG: 720, checksComplete: 5, checksTotal: 5 });
+    expect(result.score).toBe(100);
+    expect(result.verdict).toBe("READY FOR FIELD CHECK");
   });
 
   it("compares config text line-by-line", () => {

@@ -48,6 +48,35 @@ export function powerBudget(voltageV: number, averageCurrentA: number, peakCurre
   };
 }
 
+export type MissionReadinessInput = {
+  voltageNominal: number;
+  batteryContinuousA: number;
+  averageCurrentA: number;
+  peakCurrentA: number;
+  packResistanceMilliOhm: number;
+  thrustPerMotorG: number;
+  motorCount: number;
+  weightG: number;
+  checksComplete: number;
+  checksTotal: number;
+};
+
+export function missionReadiness(input: MissionReadinessInput) {
+  const power = powerBudget(input.voltageNominal, input.averageCurrentA, input.peakCurrentA, input.batteryContinuousA);
+  const sag = batterySag({ peakCurrentA: input.peakCurrentA, packResistanceMilliOhm: input.packResistanceMilliOhm });
+  const thrust = thrustBudget({ thrustPerMotorG: input.thrustPerMotorG, motorCount: input.motorCount, weightG: input.weightG });
+  const checksRatio = input.checksTotal > 0 ? Math.min(1, Math.max(0, input.checksComplete / input.checksTotal)) : 0;
+  const factors = {
+    power: power.continuousHeadroomA >= 0 ? 25 : 0,
+    sag: sag.sagV <= 2 ? 20 : sag.sagV <= 3 ? 10 : 0,
+    thrust: thrust.ratio !== null && thrust.ratio >= 2 ? 25 : thrust.ratio !== null ? 12 : 0,
+    checklist: Math.round(checksRatio * 30),
+  };
+  const score = Math.min(100, factors.power + factors.sag + factors.thrust + factors.checklist);
+  const verdict = score >= 85 ? "READY FOR FIELD CHECK" : score >= 60 ? "REVIEW BEFORE ARM" : "HOLD — INPUTS INCOMPLETE";
+  return { score, verdict, factors, power, sag, thrust };
+}
+
 export type ReadinessItem = { id: string; label: string; hint: string };
 
 export const preflightItems: ReadinessItem[] = [
