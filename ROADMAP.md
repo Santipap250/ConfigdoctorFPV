@@ -6,6 +6,8 @@ The v1.1 release adds the Flight Toolkit: power budget, battery sag model, thrus
 
 The initial release ships the profile schema, local persistence, transparent battery/load calculations, configuration validation, CLI draft export, responsive workbench surfaces, keyboard command palette, and unit tests for central domain logic.
 
+The production-hardening pass adds a frozen pnpm workspace configuration, GitHub Actions checks for every push and pull request, Playwright smoke coverage for the primary user flows, accessible inline field validation, and explicit entered/estimated/measured data provenance labels.
+
 ## Next domains
 
 | Priority | Domain | Preconditions |
