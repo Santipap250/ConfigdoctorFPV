@@ -1,6 +1,7 @@
 /** Flight Deck Atelier page: an asymmetric, graphite FPV mission workspace with real profile-driven calculations. */
 import { useEffect, useMemo, useState } from "react";
 import { Activity, ArrowRight, BatteryCharging, Box, Check, ChevronRight, ClipboardCheck, Command, Copy, Download, Gauge, Info, Layers3, Play, Plus, Radar, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Sparkles, Terminal, Wrench, X } from "lucide-react";
+// Deployment smoke-test marker: this change is intentionally behavior-neutral.
 import { BrandMark } from "@/components/BrandMark";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
