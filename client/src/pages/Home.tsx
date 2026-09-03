@@ -70,29 +70,29 @@ export default function Home() {
 function MissionHome({ onAction, onNavigate, profile, validation }: { onAction: (label: string) => void; onNavigate: (view: WorkspaceView) => void; profile: DroneProfile; validation: ReturnType<typeof validateProfile> }) {
   const critical = validation.filter((item) => item.level === "critical").length;
   const metrics = calculateMetrics(profile);
-  return <div className="mission-page page-enter">
-    <section className="mission-hero">
+  return <div className="mission-page page-enter home-revision">
+    <section className="mission-hero hero-cockpit">
       <img className="mission-hero__art" src="/assets/obix-hero-flight-deck.webp" alt="Carbon FPV drone over an engineering telemetry surface" />
-      <div className="mission-hero__scrim" />
-      <div className="mission-hero__topline"><BrandMark /><div className="hero-system-state"><StatusBadge level={critical ? "critical" : "pass"}>{critical ? "INPUT REVIEW" : "INPUTS NOMINAL"}</StatusBadge><span>LOCAL PROFILE / 01</span></div></div>
-      <div className="mission-hero__content">
+      <div className="mission-hero__scrim" /><div className="hero-telemetry" aria-hidden="true"><span className="hero-telemetry__ring hero-telemetry__ring--outer" /><span className="hero-telemetry__ring hero-telemetry__ring--inner" /><i className="hero-telemetry__crosshair" /><b className="hero-telemetry__readout">LIVE / 01</b></div>
+      <div className="mission-hero__topline reveal-item reveal-item--1"><BrandMark /><div className="hero-system-state"><StatusBadge level={critical ? "critical" : "pass"}>{critical ? "INPUT REVIEW" : "INPUTS NOMINAL"}</StatusBadge><span>LOCAL PROFILE / 01</span></div></div>
+      <div className="mission-hero__content reveal-item reveal-item--2">
         <div className="eyebrow"><i />MISSION CONTROL / ACTIVE BUILD</div>
         <h1>Calculate.<br /><em>Validate.</em> Configure.</h1>
-        <p>Edit the active build, calculate supplied battery values, flag internal conflicts, and store this project in your browser.</p>
+        <p>Edit the active build, calculate supplied battery values, flag internal conflicts, and keep this profile local to your browser.</p>
         <div className="hero-actions"><button className="button button--primary" onClick={() => onAction("OPEN WORKBENCH")}>EDIT ACTIVE PROFILE <ArrowRight size={16} /></button><button className="button button--ghost" onClick={() => onAction("VIEW CONFIG")}>REVIEW CLI DRAFT</button></div>
       </div>
-      <div className="mission-hero__instruments"><div><span>ACTIVE PROJECT</span><strong>{profile.name}</strong><small>{profile.frame}</small></div><div><span>PACK REFERENCE</span><strong>{profile.batteryCells}S / {format(metrics.voltageNominal, 1)} V</strong><small>{profile.capacityMah} mAh · {profile.batteryC} C entered</small></div><div><span>VALIDATION STATE</span><strong>{critical ? `${critical} FLAG${critical > 1 ? "S" : ""}` : "NOMINAL"}</strong><small>{critical ? "Correct values before export" : "Internal relation check clear"}</small></div></div>
+      <div className="mission-hero__instruments reveal-item reveal-item--3"><div><span>ACTIVE PROJECT</span><strong>{profile.name}</strong><small>{profile.frame}</small></div><div><span>PACK REFERENCE</span><strong>{profile.batteryCells}S / {format(metrics.voltageNominal, 1)} V</strong><small>{profile.capacityMah} mAh · {profile.batteryC} C entered</small></div><div><span>VALIDATION STATE</span><strong>{critical ? `${critical} FLAG${critical > 1 ? "S" : ""}` : "NOMINAL"}</strong><small>{critical ? "Correct values before export" : "Internal relation check clear"}</small></div></div>
     </section>
-    <div className="mission-status-line" aria-label="Active workspace status"><span><i />WORKSPACE READY</span><span>PROFILE / {profile.name}</span><span>FIRMWARE / {profile.firmware}</span><span>STORAGE / BROWSER LOCAL</span><button onClick={() => onNavigate("workbench")}>OPEN DATA SURFACE <ArrowRight size={13} /></button></div>
-    <section className="quickstrip">
-      <div className="section-kicker"><span>01</span><div><small>QUICK START</small><strong>Choose a mission path</strong></div></div>
+    <div className="mission-status-line reveal-item reveal-item--4" aria-label="Active workspace status"><span><i />WORKSPACE READY</span><span>PROFILE / {profile.name}</span><span>FIRMWARE / {profile.firmware}</span><span>STORAGE / BROWSER LOCAL</span><button onClick={() => onNavigate("workbench")}>OPEN PROFILE DATA <ArrowRight size={13} /></button></div>
+    <section className="quickstrip reveal-item reveal-item--5">
+      <div className="section-kicker"><span>01</span><div><small>QUICK START</small><strong>Run a verified operation</strong></div></div>
       <div className="quickstrip__actions">
-        {[{ label: "BUILD MY DRONE", icon: Plus, note: "Profile inputs" }, { label: "OPEN WORKBENCH", icon: Gauge, note: "Live calculation" }, { label: "ANALYZE", icon: Radar, note: "Tool center" }, { label: "VIEW CONFIG", icon: Terminal, note: "CLI draft" }].map(({ label, icon: Icon, note }) => <button key={label} onClick={() => onAction(label)} className="quick-action"><span><Icon size={18} /></span><strong>{label}</strong><small>{note}</small><ChevronRight size={16} /></button>)}
+        {[{ label: "BUILD MY DRONE", icon: Plus, note: "Profile / edit" }, { label: "OPEN WORKBENCH", icon: Gauge, note: "Calc / live" }, { label: "ANALYZE", icon: Radar, note: "Module / view" }, { label: "VIEW CONFIG", icon: Terminal, note: "Draft / export" }].map(({ label, icon: Icon, note }) => <button key={label} onClick={() => onAction(label)} className="quick-action"><span><Icon size={18} /></span><strong>{label}</strong><small>{note}</small><ChevronRight size={16} /></button>)}
       </div>
     </section>
-    <section className="mission-grid">
-      <article className="project-brief"><div className="panel-label">CURRENT BUILD</div><div className="project-brief__top"><div><h2>{profile.name}</h2><p>{profile.frame} · {profile.flightStyle}</p></div><button className="text-action" onClick={() => onNavigate("workbench")}>EDIT <ArrowRight size={14} /></button></div><div className="project-brief__specs"><span>{profile.motor} <b>{profile.motorKv} KV</b></span><span>{profile.prop}</span><span>{profile.batteryCells}S {profile.capacityMah} mAh</span></div><div className="project-brief__rule"><i />PROFILE-SCOPED DATA · STORED LOCALLY</div></article>
-      <article className="analyzer-slab"><img src="/assets/obix-analyzer-signal.webp" alt="Abstract FPV telemetry waveform" /><div><div className="panel-label">INPUT INTEGRITY</div><h3>{critical ? "Review before export" : "Ready to continue"}</h3><p>{critical ? "Critical input conflicts require correction before the CLI draft should be used." : "The active inputs have no critical internal conflicts. Compatibility is not certified."}</p><button className="text-action" onClick={() => onNavigate("cli")}>OPEN VALIDATOR <ArrowRight size={14} /></button></div></article>
+    <section className="mission-grid reveal-item reveal-item--6">
+      <article className="project-brief"><div className="panel-label">ACTIVE BUILD / PROFILE 01</div><div className="project-brief__top"><div><h2>{profile.name}</h2><p>{profile.frame} · {profile.flightStyle}</p></div><button className="text-action" onClick={() => onNavigate("workbench")}>EDIT <ArrowRight size={14} /></button></div><div className="project-brief__specs"><span>{profile.motor} <b>{profile.motorKv} KV</b></span><span>{profile.prop}</span><span>{profile.batteryCells}S {profile.capacityMah} mAh</span></div><div className="project-brief__rule"><i />PROFILE-SCOPED DATA · STORED LOCALLY</div></article>
+      <article className="analyzer-slab"><img src="/assets/obix-analyzer-signal.webp" alt="Abstract FPV telemetry waveform" /><div><div className="panel-label">INPUT INTEGRITY</div><h3>{critical ? "Review before export" : "Validation clear"}</h3><p>{critical ? "Critical input conflicts require correction before the CLI draft should be used." : "No critical internal conflict. Component compatibility remains unverified."}</p><button className="text-action" onClick={() => onNavigate("cli")}>OPEN VALIDATOR <ArrowRight size={14} /></button></div></article>
     </section>
   </div>;
 }
