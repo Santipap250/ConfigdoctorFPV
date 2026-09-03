@@ -2,6 +2,8 @@
 
 ## Delivered foundation
 
+The v1.1 release adds the Flight Toolkit: power budget, battery sag model, thrust margin, persistent pre-flight checklist, and line-by-line config diff. These utilities remain input-driven and explicitly avoid unverified hardware/firmware compatibility claims.
+
 The initial release ships the profile schema, local persistence, transparent battery/load calculations, configuration validation, CLI draft export, responsive workbench surfaces, keyboard command palette, and unit tests for central domain logic.
 
 ## Next domains

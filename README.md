@@ -20,3 +20,8 @@ The generated CLI is a reviewable draft. It sanitizes project labels and identif
 ## Current scope and future work
 
 The tool center labels modules as **Available** only when an implementation exists. Planned categories are intentionally not presented as analyzers. See [ROADMAP.md](./ROADMAP.md) for the next discrete domains.
+
+
+## Flight Toolkit
+
+The Tools surface now includes five local utilities for practical FPV workflows: Power Budget, Battery Sag Check, Thrust Margin, a persistent Pre-flight Checklist, and Config Diff. Each tool uses explicit user inputs and states its limitations instead of presenting unverified component or firmware claims as facts.
