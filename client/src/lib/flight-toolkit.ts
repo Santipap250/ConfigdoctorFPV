@@ -67,13 +67,14 @@ export function missionReadiness(input: MissionReadinessInput) {
   const thrust = thrustBudget({ thrustPerMotorG: input.thrustPerMotorG, motorCount: input.motorCount, weightG: input.weightG });
   const checksRatio = input.checksTotal > 0 ? Math.min(1, Math.max(0, input.checksComplete / input.checksTotal)) : 0;
   const factors = {
-    power: power.continuousHeadroomA >= 0 ? 25 : 0,
+    power: power.continuousHeadroomA > 0 ? 25 : 0,
     sag: sag.sagV <= 2 ? 20 : sag.sagV <= 3 ? 10 : 0,
-    thrust: thrust.ratio !== null && thrust.ratio >= 2 ? 25 : thrust.ratio !== null ? 12 : 0,
+    thrust: thrust.totalThrustG > 0 && thrust.ratio !== null && thrust.ratio >= 2 ? 25 : thrust.totalThrustG > 0 && thrust.ratio !== null ? 12 : 0,
     checklist: Math.round(checksRatio * 30),
   };
   const score = Math.min(100, factors.power + factors.sag + factors.thrust + factors.checklist);
-  const verdict = score >= 85 ? "READY FOR FIELD CHECK" : score >= 60 ? "REVIEW BEFORE ARM" : "HOLD — INPUTS INCOMPLETE";
+  const evidenceIncomplete = thrust.totalThrustG <= 0 || checksRatio < 1;
+  const verdict = evidenceIncomplete ? "HOLD — INPUTS INCOMPLETE" : score >= 85 ? "READY FOR FIELD CHECK" : score >= 60 ? "REVIEW BEFORE ARM" : "HOLD — INPUTS INCOMPLETE";
   return { score, verdict, factors, power, sag, thrust };
 }
 

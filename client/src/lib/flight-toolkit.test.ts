@@ -33,6 +33,23 @@ describe("flight toolkit domain", () => {
     expect(result.verdict).toBe("READY FOR FIELD CHECK");
   });
 
+  it("holds when measured thrust evidence is missing", () => {
+    const result = missionReadiness({ voltageNominal: 22.2, batteryContinuousA: 130, averageCurrentA: 28, peakCurrentA: 120, packResistanceMilliOhm: 12, thrustPerMotorG: 0, motorCount: 4, weightG: 720, checksComplete: 10, checksTotal: 10 });
+    expect(result.factors.thrust).toBe(0);
+    expect(result.verdict).toBe("HOLD — INPUTS INCOMPLETE");
+  });
+
+  it("holds when the field checklist is incomplete", () => {
+    const result = missionReadiness({ voltageNominal: 22.2, batteryContinuousA: 130, averageCurrentA: 28, peakCurrentA: 120, packResistanceMilliOhm: 12, thrustPerMotorG: 900, motorCount: 4, weightG: 720, checksComplete: 9, checksTotal: 10 });
+    expect(result.verdict).toBe("HOLD — INPUTS INCOMPLETE");
+  });
+
+  it("does not award power headroom when peak current reaches the limit", () => {
+    const result = missionReadiness({ voltageNominal: 22.2, batteryContinuousA: 130, averageCurrentA: 28, peakCurrentA: 130, packResistanceMilliOhm: 12, thrustPerMotorG: 900, motorCount: 4, weightG: 720, checksComplete: 10, checksTotal: 10 });
+    expect(result.factors.power).toBe(0);
+    expect(result.verdict).toBe("REVIEW BEFORE ARM");
+  });
+
   it("compares config text line-by-line", () => {
     const result = diffConfigText("a\nb\nc", "a\nx\nc\nd");
     expect(result.changed).toBe(2);
