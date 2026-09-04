@@ -26,4 +26,21 @@ test.describe("OBIX production smoke", () => {
     await expect(thrust).toBeFocused();
     await expect(thrust).toHaveClass(/is-fix-target/);
   });
+
+  test("Motor & Prop Evidence table shows cited entries and links to a real source", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Tools" }).click();
+    await expect(page.getByRole("heading", { name: /Hardware data with a/ })).toBeVisible();
+    const firstSourceLink = page.locator(".evidence-row__source a").first();
+    await expect(firstSourceLink).toBeVisible();
+    await expect(firstSourceLink).toHaveAttribute("href", /^https:\/\//);
+    await expect(firstSourceLink).toHaveAttribute("target", "_blank");
+  });
+
+  test("Motor & Prop Evidence filters narrow results and can reach an empty, non-guessed state", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Tools" }).click();
+    await page.getByLabel("Search evidence entries").fill("no-such-hardware-xyz");
+    await expect(page.getByText("No cited entries match this filter.")).toBeVisible();
+  });
 });
