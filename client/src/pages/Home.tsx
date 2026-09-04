@@ -1,18 +1,28 @@
 /** Flight Deck Atelier page: an asymmetric, graphite FPV mission workspace with real profile-driven calculations. */
-import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRight, BatteryCharging, Box, Check, ChevronRight, ClipboardCheck, Command, Copy, Download, Gauge, Info, Layers3, Play, Plus, Radar, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Sparkles, Terminal, Wrench, X } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Activity, ArrowRight, BatteryCharging, Box, ChevronRight, ClipboardCheck, Command, Gauge, Info, Layers3, Play, Plus, Radar, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Sparkles, Terminal, Wrench, X } from "lucide-react";
 // Deployment smoke-test marker: this change is intentionally behavior-neutral.
 import { BrandMark } from "@/components/BrandMark";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TelemetryChart } from "@/components/TelemetryChart";
 import { WorkbenchShell, type WorkspaceView } from "@/components/WorkbenchShell";
-import { FlightToolkit } from "@/components/FlightToolkit";
-import { MissionReadinessGuide } from "@/components/MissionReadinessGuide";
-import { EvidenceTable } from "@/components/EvidenceTable";
-import { calculateMetrics, defaultProfile, generateCliDraft, summarizeProfile, type DroneProfile, type FlightStyle, validateProfile } from "@/lib/drone";
+import { ValidationPanel } from "@/components/ValidationPanel";
+import type { ToolGroup } from "@/components/ToolCenter";
+import { format } from "@/lib/format";
+import { calculateMetrics, defaultProfile, generateCliDraft, type DroneProfile, type FlightStyle, validateProfile } from "@/lib/drone";
 
-const toolGroups = [
+// Tools and Config are not needed for the initial Home/Workbench experience,
+// so they load on demand as separate chunks the first time a user navigates
+// to them, rather than shipping in the initial bundle.
+const ToolCenter = lazy(() => import("@/components/ToolCenter"));
+const ConfigCenter = lazy(() => import("@/components/ConfigCenter"));
+
+function ViewLoading() {
+  return <div className="view-loading" role="status" aria-live="polite"><span className="view-loading__dot" />Loading…</div>;
+}
+
+const toolGroups: ToolGroup[] = [
   { group: "BUILD", tools: [{ name: "Drone Builder", detail: "Profile data model", active: true, icon: Box }, { name: "Weight Calculator", detail: "Profile mass field", active: true, icon: Gauge }, { name: "Battery Calculator", detail: "Load & duration", active: true, icon: BatteryCharging }] },
   { group: "TUNING", tools: [{ name: "PID Advisor", detail: "Architecture ready", active: false, icon: SlidersHorizontal }, { name: "Filter Advisor", detail: "Architecture ready", active: false, icon: Radar }, { name: "Rates Visualizer", detail: "Architecture ready", active: false, icon: Activity }] },
   { group: "ANALYSIS", tools: [{ name: "Thrust Analyzer", detail: "Measured data input", active: true, icon: Gauge }, { name: "Motor & Prop Evidence", detail: "Cited evidence tables", active: true, icon: Wrench }, { name: "Blackbox Analyzer", detail: "Import flow planned", active: false, icon: Layers3 }] },
@@ -20,8 +30,6 @@ const toolGroups = [
 ];
 
 const navigationTargets: Record<string, WorkspaceView> = { "OPEN WORKBENCH": "workbench", "BUILD MY DRONE": "workbench", ANALYZE: "tools", "VIEW CONFIG": "cli" };
-
-function format(value: number | null, fraction = 1) { return value === null || !Number.isFinite(value) ? "—" : value.toFixed(fraction); }
 
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -76,8 +84,8 @@ export default function Home() {
       {notice ? <div className="notice-banner"><Info size={16} /><span>{notice}</span><button onClick={() => setNotice(null)} aria-label="Dismiss notice"><X size={15} /></button></div> : null}
       {activeView === "home" ? <MissionHome onAction={useAction} onNavigate={setActiveView} profile={profile} validation={validation} /> : null}
       {activeView === "workbench" ? <ProfileWorkbench profile={profile} update={update} metrics={metrics} validation={validation} onReset={resetProfile} onViewConfig={() => setActiveView("cli")} /> : null}
-      {activeView === "tools" ? <ToolCenter groups={toolGroups} onOpen={openTool} profile={profile} metrics={metrics} /> : null}
-      {activeView === "cli" ? <ConfigCenter profile={profile} metrics={metrics} validation={validation} cli={cli} copied={copied} onCopy={copyCli} onDownload={() => downloadText(`${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "obix-config"}.txt`, cli)} onWorkbench={() => setActiveView("workbench")} /> : null}
+      {activeView === "tools" ? <Suspense fallback={<ViewLoading />}><ToolCenter groups={toolGroups} onOpen={openTool} profile={profile} metrics={metrics} /></Suspense> : null}
+      {activeView === "cli" ? <Suspense fallback={<ViewLoading />}><ConfigCenter profile={profile} metrics={metrics} validation={validation} cli={cli} copied={copied} onCopy={copyCli} onDownload={() => downloadText(`${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "obix-config"}.txt`, cli)} onWorkbench={() => setActiveView("workbench")} /></Suspense> : null}
       {isPaletteOpen ? <CommandPalette onClose={() => setPaletteOpen(false)} onAction={(view) => { setActiveView(view); setPaletteOpen(false); }} /> : null}
     </WorkbenchShell>
   );
@@ -142,12 +150,6 @@ function ProfileWorkbench({ profile, update, metrics, validation, onReset, onVie
     <ValidationPanel validation={validation} />
   </div>;
 }
-
-function ToolCenter({ groups, onOpen, profile, metrics }: { groups: typeof toolGroups; onOpen: (active: boolean, name: string) => void; profile: DroneProfile; metrics: ReturnType<typeof calculateMetrics> }) { return <div className="tools-page page-enter"><header className="mission-header"><div><div className="eyebrow"><i />SYSTEM / TOOL CENTER</div><h1>Tools with a <em>clear scope.</em></h1><p>Start with Mission Readiness: a conservative field decision combining power, sag, thrust evidence, and pre-flight checks. Then go deeper with focused utilities for the signals behind the score.</p></div><div className="tool-search"><Search size={17} /><input aria-label="Search tools" placeholder="Search tools" /></div></header><FlightToolkit profile={profile} voltageNominal={metrics.voltageNominal} batteryContinuousA={metrics.batteryContinuousA} /><EvidenceTable /><MissionReadinessGuide /><div className="tool-groups">{groups.map((section) => <section key={section.group} className="tool-group"><div className="tool-group__head"><span>{section.group}</span><i /></div><div className="tool-grid">{section.tools.map(({ name, detail, active, icon: Icon }) => <button className={`tool-card ${active ? "tool-card--active" : ""}`} onClick={() => onOpen(active, name)} key={name}><span className="tool-card__icon"><Icon size={20} /></span><div><h2>{name}</h2><p>{detail}</p></div>{active ? <StatusBadge level="pass">AVAILABLE</StatusBadge> : <StatusBadge level="neutral">PLANNED</StatusBadge>}<ChevronRight className="tool-card__arrow" size={18} /></button>)}</div></section>)}</div></div>; }
-
-function ConfigCenter({ profile, metrics, validation, cli, copied, onCopy, onDownload, onWorkbench }: { profile: DroneProfile; metrics: ReturnType<typeof calculateMetrics>; validation: ReturnType<typeof validateProfile>; cli: string; copied: boolean; onCopy: () => void; onDownload: () => void; onWorkbench: () => void }) { const critical = validation.filter((item) => item.level === "critical").length; return <div className="config-page page-enter"><header className="mission-header"><div><div className="eyebrow"><i />CONFIG BUILDER / STEP 08</div><h1>Review. <em>Validate.</em> Export.</h1><p>A transparent CLI draft generated from the active profile; it is not a firmware compatibility guarantee.</p></div><button className="button button--ghost" onClick={onWorkbench}><ChevronRight className="rotate-180" size={16} /> EDIT PROFILE</button></header><section className="config-progress"><span className="is-complete">01 PROFILE</span><span className="is-complete">02 BATTERY</span><span className="is-complete">03 BUILD</span><span className="is-active">04 REVIEW</span></section><div className="config-grid"><section className="cli-console"><div className="console-top"><div><span className="console-lamp console-lamp--red" /><span className="console-lamp console-lamp--amber" /><span className="console-lamp console-lamp--lime" /></div><span>OBIX / GENERATED-DRAFT.TXT</span><div><button className="console-action" onClick={onCopy}>{copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "COPIED" : "COPY CLI"}</button><button className="console-action" onClick={onDownload}><Download size={15} />DOWNLOAD</button></div></div><pre>{cli.split("\n").map((line, index) => <code key={`${line}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{line || " "}{"\n"}</code>)}</pre><div className="console-foot"><span>Target: {profile.firmware}</span><span>Nominal: {format(metrics.voltageNominal, 1)} V</span><span>State: {critical ? "REVIEW REQUIRED" : "DRAFT READY"}</span></div></section><aside className="config-sidebar"><div className="profile-snapshot"><div className="panel-label">BUILD SNAPSHOT</div>{summarizeProfile(profile).map((item) => <p key={item}>{item}</p>)}</div><ValidationPanel validation={validation} compact /></aside></div></div>; }
-
-function ValidationPanel({ validation, compact = false }: { validation: ReturnType<typeof validateProfile>; compact?: boolean }) { const critical = validation.filter((item) => item.level === "critical").length; const warnings = validation.filter((item) => item.level === "warning").length; return <section className={`validation-panel ${compact ? "validation-panel--compact" : ""}`}><div className="validation-panel__head"><div><span className="panel-index">{compact ? "CHECK" : "02"}</span><h2>{compact ? "Validation" : "Input validation"}</h2></div><div className="validation-summary">{critical ? <StatusBadge level="critical">{critical} CRITICAL</StatusBadge> : null}{warnings ? <StatusBadge level="warning">{warnings} WARNING</StatusBadge> : null}{!critical && !warnings ? <StatusBadge level="pass">PASS</StatusBadge> : null}</div></div><div className="validation-list">{validation.map((item) => <article key={`${item.level}-${item.title}`} className={`validation-item validation-item--${item.level}`}><StatusBadge level={item.level}>{item.level.toUpperCase()}</StatusBadge><div><h3>{item.title}</h3><p>{item.detail}</p></div></article>)}</div></section>; }
 
 function Field({ label, value, onChange, error }: { label: string; value: string; onChange: (value: string) => void; error?: string }) { return <label className="field"><span>{label}</span><input aria-label={label} aria-invalid={Boolean(error)} value={value} onChange={(event) => onChange(event.target.value)} />{error ? <small className="field-error">{error}</small> : null}</label>; }
 function NumberField({ label, value, unit, onChange, step = "any", error, source }: { label: string; value: number; unit: string; onChange: (value: number) => void; step?: string; error?: string; source?: string }) { return <label className="field"><span>{label}{source ? <small className="field-source">{source}</small> : null}</span><div className="input-with-unit"><input aria-label={label} aria-invalid={Boolean(error)} type="number" min="0" step={step} value={value || ""} onChange={(event) => onChange(Number(event.target.value))} /><b>{unit}</b></div>{error ? <small className="field-error">{error}</small> : null}</label>; }
