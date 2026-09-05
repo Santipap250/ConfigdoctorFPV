@@ -12,6 +12,15 @@ export type EvidenceProvenance = "measured" | "estimated" | "reference";
 
 export const evidenceProvenanceOptions: EvidenceProvenance[] = ["measured", "estimated", "reference"];
 
+/** Immutable audit metadata for the provenance claim attached to an entry. */
+export type EvidenceProvenanceRecord = {
+  schemaVersion: "1.0";
+  recordedAt: string;
+  lastReviewedAt: string;
+  reviewedBy: string;
+  changeNote: string;
+};
+
 /** A checkable citation for one evidence entry. Every field here is required — an
  * entry cannot claim a hardware fact without saying where it came from and when
  * it was checked. */
@@ -35,6 +44,7 @@ type EvidenceBase = {
    * is kept separate from `model` rather than folded in. */
   version?: string;
   provenance: EvidenceProvenance;
+  provenanceRecord: EvidenceProvenanceRecord;
   source: EvidenceSource;
 };
 
@@ -79,6 +89,10 @@ function isIsoDate(value: string): boolean {
   return Number.isFinite(date.getTime());
 }
 
+function isNonEmpty(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 function isFinitePositive(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
@@ -96,6 +110,26 @@ export function validateEvidenceEntry(entry: HardwareEvidence): EvidenceIssue[] 
   if (!entry.model.trim()) issues.push({ field: "model", message: "Model is required." });
   if (!evidenceProvenanceOptions.includes(entry.provenance)) {
     issues.push({ field: "provenance", message: "Provenance must be measured, estimated, or reference." });
+  }
+
+  if (!entry.provenanceRecord) {
+    issues.push({ field: "provenanceRecord", message: "A versioned provenance record is required." });
+  } else {
+    if (entry.provenanceRecord.schemaVersion !== "1.0") {
+      issues.push({ field: "provenanceRecord.schemaVersion", message: "Unsupported provenance schema version." });
+    }
+    if (!isIsoDate(entry.provenanceRecord.recordedAt)) {
+      issues.push({ field: "provenanceRecord.recordedAt", message: "A recorded date in YYYY-MM-DD format is required." });
+    }
+    if (!isIsoDate(entry.provenanceRecord.lastReviewedAt)) {
+      issues.push({ field: "provenanceRecord.lastReviewedAt", message: "A review date in YYYY-MM-DD format is required." });
+    }
+    if (!isNonEmpty(entry.provenanceRecord.reviewedBy)) {
+      issues.push({ field: "provenanceRecord.reviewedBy", message: "The reviewer identity is required." });
+    }
+    if (!isNonEmpty(entry.provenanceRecord.changeNote)) {
+      issues.push({ field: "provenanceRecord.changeNote", message: "A provenance change note is required." });
+    }
   }
 
   if (!entry.source) {

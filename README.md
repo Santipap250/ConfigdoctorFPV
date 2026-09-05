@@ -31,3 +31,7 @@ The Tools surface now includes five local utilities for practical FPV workflows:
 Every push to `main` and every pull request runs the GitHub Actions quality gate in `.github/workflows/ci.yml`. The gate installs from the frozen lockfile, runs TypeScript checks, executes the unit suite, builds the production artifact, and runs Playwright browser smoke tests for the mission-to-tools flow, required-field validation, and Mission Readiness `Fix this` navigation.
 
 Run the same checks locally with `pnpm check`, `pnpm exec vitest run`, `pnpm build`, and `pnpm exec playwright test`. Browser form feedback marks invalid fields with `aria-invalid`, shows an inline explanation, and identifies whether a value is entered, estimated, or measured evidence.
+
+## Evidence provenance contract
+
+Motor and propeller rows are shown only when they have a checkable HTTP(S) source and a valid `provenanceRecord`. Each record carries `schemaVersion`, `recordedAt`, `lastReviewedAt`, `reviewedBy`, and a `changeNote`. The UI exposes the provenance version and review date so a future source refresh can be audited without silently overwriting the evidence history. A missing or unsupported provenance record is rejected by the domain sanitizer and never reaches the table.

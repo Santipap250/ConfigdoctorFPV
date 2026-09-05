@@ -29,6 +29,13 @@ const rawSeedEvidence: HardwareEvidence[] = [
     maxPowerDurationS: 10,
     ratedVoltage: "4S",
     provenance: "reference",
+    provenanceRecord: {
+      schemaVersion: "1.0",
+      recordedAt: "2026-09-04",
+      lastReviewedAt: "2026-09-06",
+      reviewedBy: "OBIX evidence review",
+      changeNote: "Initial manufacturer reference capture; no independent bench result asserted.",
+    },
     source: {
       url: "https://store.tmotor.com/product/f60prov-fpv-motor.html",
       publisher: "T-Motor (manufacturer official store)",
@@ -51,6 +58,13 @@ const rawSeedEvidence: HardwareEvidence[] = [
     maxPowerDurationS: 10,
     ratedVoltage: "5-6S",
     provenance: "reference",
+    provenanceRecord: {
+      schemaVersion: "1.0",
+      recordedAt: "2026-09-04",
+      lastReviewedAt: "2026-09-06",
+      reviewedBy: "OBIX evidence review",
+      changeNote: "Initial manufacturer reference capture; no independent bench result asserted.",
+    },
     source: {
       url: "https://store.tmotor.com/product/f60prov-fpv-motor.html",
       publisher: "T-Motor (manufacturer official store)",
@@ -71,6 +85,13 @@ const rawSeedEvidence: HardwareEvidence[] = [
     weightG: 4.2,
     hubBoreMm: 5,
     provenance: "reference",
+    provenanceRecord: {
+      schemaVersion: "1.0",
+      recordedAt: "2026-09-04",
+      lastReviewedAt: "2026-09-06",
+      reviewedBy: "OBIX evidence review",
+      changeNote: "Initial manufacturer reference capture; no independent bench result asserted.",
+    },
     source: {
       url: "https://www.gemfanhobby.com/hurricane-51466-v2-pc-3-blade.html",
       publisher: "Gemfan Hobby (manufacturer official site)",
