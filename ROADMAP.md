@@ -13,7 +13,8 @@ The production-hardening pass adds a frozen pnpm workspace configuration, GitHub
 | Priority | Domain | Preconditions |
 |---|---|---|
 | P1 | Importable motor and prop evidence tables | Versioned source data and citation/provenance rules |
-| P1 | Config diff and firmware-specific validation | Target firmware schema and explicit version handling |
+| — | ~~Config diff~~ — delivered as a structural CLI text diff (Config view). Firmware-specific *validation* of diffed parameters is intentionally out of scope until the item below is unblocked. | — |
+| P1 | Firmware-specific config validation (e.g. flagging a diffed parameter as out of a known-safe range for a given firmware version) | Target firmware schema and explicit version handling |
 | P1 | Saved drone accounts and cloud synchronization | Server, authentication, ownership model and data migration policy |
 | P2 | Blackbox / log analysis | Secure upload flow, parser isolation and transparent calculation methodology |
 | P2 | PID and filter advice | Validated analysis model, supported firmware versions and limits disclosure |
