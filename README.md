@@ -35,3 +35,9 @@ Run the same checks locally with `pnpm check`, `pnpm exec vitest run`, `pnpm bui
 ## Evidence provenance contract
 
 Motor and propeller rows are shown only when they have a checkable HTTP(S) source and a valid `provenanceRecord`. Each record carries `schemaVersion`, `recordedAt`, `lastReviewedAt`, `reviewedBy`, and a `changeNote`. The UI exposes the provenance version and review date so a future source refresh can be audited without silently overwriting the evidence history. A missing or unsupported provenance record is rejected by the domain sanitizer and never reaches the table.
+
+## Evidence integrity v1.2
+
+Seed motor/prop evidence now carries a structured source snapshot hash, reviewed field list, and source-version note. The snapshot hash fingerprints the exact source-derived claim fields stored in the repository; it is not a hash of the live third-party webpage. The reviewed T-Motor F60 PRO V KV1950 seed was corrected to 33.9 g and 1216 W and is protected by regression tests.
+
+Drone profiles can explicitly link motor and prop evidence records. OBIX reports `MATCHED`, `REVIEW`, `UNKNOWN`, or source-range mismatch states without inferring compatibility when evidence is absent.
