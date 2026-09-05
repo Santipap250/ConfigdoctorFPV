@@ -231,6 +231,38 @@ body { background-image: radial-gradient(circle at 50% -10%, rgba(184,255,77,.08
 @keyframes view-loading-pulse { 0%, 100% { opacity:.35; transform:scale(0.85); } 50% { opacity:1; transform:scale(1); } }
 @media (prefers-reduced-motion: reduce) { .view-loading__dot { animation:none; opacity:.8; } }
 
+/* Config Diff tool */
+.config-diff { margin-top:1.25rem; padding:1.25rem; border:1px solid rgba(233,246,225,.16); background:linear-gradient(140deg, rgba(21,26,23,.98), rgba(13,17,14,.98)); }
+.config-diff__head { display:flex; align-items:flex-start; justify-content:space-between; gap:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+.config-diff__head h2 { margin:.35rem 0 .4rem; font-family:var(--font-display); font-size:clamp(1.15rem, 2.4vw, 1.6rem); letter-spacing:-.05em; }
+.config-diff__head p { max-width:44rem; margin:0; color:#929a91; font-size:.76rem; line-height:1.55; }
+.config-diff__panes { display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; gap:.7rem; padding:1rem 0; }
+.config-diff__pane { display:grid; gap:.4rem; }
+.config-diff__pane-head { display:flex; align-items:center; justify-content:space-between; color:#929a91; font-family:var(--font-mono); font-size:.58rem; letter-spacing:.08em; }
+.config-diff__pane textarea { min-height:9rem; padding:.7rem; border:1px solid var(--border); background:#0d100e; color:#d5e1ce; font-family:var(--font-mono); font-size:.72rem; line-height:1.55; resize:vertical; }
+.config-diff__pane textarea:focus-visible { outline:2px solid #b8ff4d; outline-offset:1px; }
+.config-diff__swap { display:grid; place-items:center; align-self:center; width:2.2rem; height:2.2rem; border:1px solid var(--border); background:#151a17; color:#b8ff4d; }
+.config-diff__swap:hover { background:rgba(184,255,77,.1); }
+.config-diff__empty { display:grid; grid-template-columns:auto 1fr; gap:.7rem; align-items:flex-start; padding:1rem; border:1px dashed rgba(233,246,225,.2); color:#b8ff4d; }
+.config-diff__empty strong { display:block; color:#edf0e7; font-size:.78rem; }
+.config-diff__empty p { margin:.3rem 0 0; color:#929a91; font-size:.72rem; line-height:1.5; }
+.config-diff__toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.7rem; padding:.85rem 0; }
+.config-diff__summary { display:flex; flex-wrap:wrap; gap:.4rem; }
+.config-diff__actions { display:flex; align-items:center; gap:.85rem; }
+.config-diff__toggle { display:flex; align-items:center; gap:.4rem; color:#929a91; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.04em; }
+.config-diff__rows { display:grid; gap:.4rem; }
+.config-diff__row { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:.85rem; padding:.65rem .85rem; border:1px solid rgba(233,246,225,.1); background:#111512; }
+.config-diff__key { color:#edf0e7; font-family:var(--font-mono); font-size:.72rem; }
+.config-diff__values { display:flex; align-items:center; gap:.5rem; color:#aab5a7; font-family:var(--font-mono); font-size:.68rem; white-space:nowrap; }
+.config-diff__row--removed .config-diff__before { color:#ff7e70; }
+.config-diff__row--added .config-diff__after { color:#b8ff4d; }
+.config-diff__row--changed .config-diff__before { color:#ffc96b; text-decoration:line-through; opacity:.8; }
+.config-diff__row--changed .config-diff__after { color:#b8ff4d; }
+.config-diff__other { margin-top:1rem; padding-top:.85rem; border-top:1px solid var(--border); display:grid; gap:.4rem; }
+.config-diff__other-line { display:flex; align-items:center; gap:.6rem; margin:0; color:#aab5a7; font-family:var(--font-mono); font-size:.66rem; }
+.config-diff__other-line code { color:#d5e1ce; }
+@media (max-width:900px) { .config-diff__panes { grid-template-columns:1fr; } .config-diff__swap { justify-self:center; transform:rotate(90deg); } .config-diff__row { grid-template-columns:auto 1fr; row-gap:.4rem; } .config-diff__values { grid-column:1 / -1; white-space:normal; } }
+
 /* Motor / Prop evidence table */
 .evidence-table { position:relative; margin-top:1.25rem; padding:1.25rem; border:1px solid rgba(233,246,225,.16); background:linear-gradient(140deg, rgba(21,26,23,.98), rgba(13,17,14,.98)); box-shadow:0 14px 34px rgba(0,0,0,.11), inset 0 1px 0 rgba(255,255,255,.025); }
 .evidence-table__head { display:flex; align-items:flex-start; justify-content:space-between; gap:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
