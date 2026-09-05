@@ -26,7 +26,7 @@ const toolGroups: ToolGroup[] = [
   { group: "BUILD", tools: [{ name: "Drone Builder", detail: "Profile data model", active: true, icon: Box }, { name: "Weight Calculator", detail: "Profile mass field", active: true, icon: Gauge }, { name: "Battery Calculator", detail: "Load & duration", active: true, icon: BatteryCharging }] },
   { group: "TUNING", tools: [{ name: "PID Advisor", detail: "Architecture ready", active: false, icon: SlidersHorizontal }, { name: "Filter Advisor", detail: "Architecture ready", active: false, icon: Radar }, { name: "Rates Visualizer", detail: "Architecture ready", active: false, icon: Activity }] },
   { group: "ANALYSIS", tools: [{ name: "Thrust Analyzer", detail: "Measured data input", active: true, icon: Gauge }, { name: "Motor & Prop Evidence", detail: "Cited evidence tables", active: true, icon: Wrench }, { name: "Blackbox Analyzer", detail: "Import flow planned", active: false, icon: Layers3 }] },
-  { group: "CONFIG", tools: [{ name: "Config Builder", detail: "CLI draft + checks", active: true, icon: Terminal }, { name: "Config Validator", detail: "Input integrity", active: true, icon: ShieldCheck }, { name: "Config Diff", detail: "Architecture ready", active: false, icon: ClipboardCheck }] },
+  { group: "CONFIG", tools: [{ name: "Config Builder", detail: "CLI draft + checks", active: true, icon: Terminal }, { name: "Config Validator", detail: "Input integrity", active: true, icon: ShieldCheck }, { name: "Config Diff", detail: "Structural CLI comparison", active: true, icon: ClipboardCheck }] },
 ];
 
 const navigationTargets: Record<string, WorkspaceView> = { "OPEN WORKBENCH": "workbench", "BUILD MY DRONE": "workbench", ANALYZE: "tools", "VIEW CONFIG": "cli" };
@@ -65,6 +65,11 @@ export default function Home() {
   const useAction = (label: string) => { const view = navigationTargets[label]; if (view) setActiveView(view); };
   const openTool = (active: boolean, name: string) => {
     if (active) {
+      if (name.includes("Diff")) {
+        setActiveView("cli");
+        window.requestAnimationFrame(() => document.getElementById("config-diff-tool")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        return;
+      }
       if (name.includes("Config")) { setActiveView("cli"); return; }
       if (name.includes("Evidence")) {
         setActiveView("tools");
