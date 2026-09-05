@@ -43,4 +43,27 @@ test.describe("OBIX production smoke", () => {
     await page.getByLabel("Search evidence entries").fill("no-such-hardware-xyz");
     await expect(page.getByText("No cited entries match this filter.")).toBeVisible();
   });
+
+  test("Config Diff stays empty until both sides have text", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Config", exact: true }).click();
+    await expect(page.getByText("Paste CLI text on both sides to compare.")).toBeVisible();
+  });
+
+  test("Config Diff reports added, removed, and changed keys", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Config", exact: true }).click();
+    await page.getByLabel("Before CLI text").fill("set gyro_lpf1_static_hz = 500\nset dterm_lpf1_static_hz = 150");
+    await page.getByLabel("After CLI text").fill("set gyro_lpf1_static_hz = 350\nset dyn_notch_count = 3");
+    await expect(page.locator(".config-diff__row--changed")).toContainText("gyro_lpf1_static_hz");
+    await expect(page.locator(".config-diff__row--added")).toContainText("dyn_notch_count");
+    await expect(page.locator(".config-diff__row--removed")).toContainText("dterm_lpf1_static_hz");
+  });
+
+  test("Config Diff 'use current draft' fills a pane from the active profile", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Config", exact: true }).click();
+    await page.getByRole("button", { name: "USE CURRENT DRAFT" }).first().click();
+    await expect(page.getByLabel("Before CLI text")).not.toHaveValue("");
+  });
 });
