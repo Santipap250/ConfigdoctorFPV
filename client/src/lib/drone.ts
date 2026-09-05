@@ -16,6 +16,8 @@ export type DroneProfile = {
   measuredThrustPerMotorG: number;
   firmware: string;
   flightStyle: FlightStyle;
+  motorEvidenceId?: string;
+  propEvidenceId?: string;
 };
 
 export const defaultProfile: DroneProfile = {
@@ -77,7 +79,7 @@ export function validateProfile(profile: DroneProfile): ValidationResult[] {
   if (!profile.name.trim()) {
     results.push({ level: "critical", title: "Project name is required", detail: "Give this profile a name before exporting a configuration draft." });
   }
-  if (!isFinitePositive(profile.batteryCells) || profile.batteryCells > 12) {
+  if (!Number.isInteger(profile.batteryCells) || profile.batteryCells < 1 || profile.batteryCells > 12) {
     results.push({ level: "critical", title: "Battery cell count is invalid", detail: "Enter a whole battery cell count from 1 through 12." });
   }
   if (!isFinitePositive(profile.capacityMah)) {

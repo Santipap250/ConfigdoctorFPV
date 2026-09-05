@@ -9,6 +9,11 @@ describe("drone calculations", () => {
     expect(metrics.estimatedFlightMinutes).toBeCloseTo(2.2285, 3);
   });
 
+  it("rejects fractional battery cell counts", () => {
+    const validation = validateProfile({ ...defaultProfile, batteryCells: 2.5 });
+    expect(validation.some((item) => item.title === "Battery cell count is invalid" && item.level === "critical")).toBe(true);
+  });
+
   it("flags peak current above stated battery capability", () => {
     const validation = validateProfile({ ...defaultProfile, expectedPeakCurrentA: 160 });
     expect(validation.some((item) => item.level === "critical")).toBe(true);

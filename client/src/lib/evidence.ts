@@ -33,6 +33,14 @@ export type EvidenceSource = {
   retrievedDate: string;
   /** Optional short context, e.g. "manufacturer product page", "bench test video". */
   note?: string;
+  /** SHA-256 of the structured claim snapshot captured from the cited source.
+   * This is intentionally NOT a hash of the live web page; it fingerprints the
+   * exact source-derived fields OBIX reviewed so later edits can be audited. */
+  snapshotHash?: string;
+  /** Optional source-side revision/date label when the publisher exposes one. */
+  sourceVersion?: string;
+  /** Exact claim fields reviewed against the cited source. */
+  verifiedFields?: string[];
 };
 
 type EvidenceBase = {
@@ -144,6 +152,20 @@ export function validateEvidenceEntry(entry: HardwareEvidence): EvidenceIssue[] 
     if (!entry.source.retrievedDate || !isIsoDate(entry.source.retrievedDate)) {
       issues.push({ field: "source.retrievedDate", message: "A retrieval date in YYYY-MM-DD format is required." });
     }
+    if (entry.source.snapshotHash !== undefined && !/^[a-f0-9]{64}$/.test(entry.source.snapshotHash)) {
+      issues.push({ field: "source.snapshotHash", message: "snapshotHash must be a lowercase 64-character SHA-256 hex digest." });
+    }
+    if (entry.source.sourceVersion !== undefined && !isNonEmpty(entry.source.sourceVersion)) {
+      issues.push({ field: "source.sourceVersion", message: "sourceVersion cannot be blank when supplied." });
+    }
+    if (entry.source.verifiedFields !== undefined) {
+      if (!Array.isArray(entry.source.verifiedFields) || entry.source.verifiedFields.length === 0 || entry.source.verifiedFields.some((field) => !isNonEmpty(field))) {
+        issues.push({ field: "source.verifiedFields", message: "verifiedFields must contain at least one non-empty field name when supplied." });
+      }
+    }
+    if (entry.provenanceRecord && isIsoDate(entry.provenanceRecord.recordedAt) && isIsoDate(entry.provenanceRecord.lastReviewedAt) && entry.provenanceRecord.lastReviewedAt < entry.provenanceRecord.recordedAt) {
+      issues.push({ field: "provenanceRecord.lastReviewedAt", message: "Review date cannot be earlier than the recorded date." });
+    }
   }
 
   if (entry.kind === "motor") {
@@ -173,6 +195,11 @@ export function isEvidenceEntryValid(entry: HardwareEvidence): boolean {
  */
 export function sanitizeEvidenceList<T extends HardwareEvidence>(entries: T[]): T[] {
   return entries.filter(isEvidenceEntryValid);
+}
+
+/** Returns true only when the source has a reviewer-visible structured snapshot hash. */
+export function hasSourceSnapshot(entry: HardwareEvidence): boolean {
+  return Boolean(entry.source.snapshotHash && /^[a-f0-9]{64}$/.test(entry.source.snapshotHash));
 }
 
 export type EvidenceFilter = {

@@ -6,6 +6,7 @@ import {
   provenanceBadge,
   provenanceLabel,
   sanitizeEvidenceList,
+  hasSourceSnapshot,
   validateEvidenceEntry,
   type HardwareEvidence,
   type MotorEvidence,
@@ -114,6 +115,16 @@ describe("validateEvidenceEntry", () => {
     expect(validateEvidenceEntry(entry).some((issue) => issue.field === "provenanceRecord.schemaVersion")).toBe(true);
   });
 
+  it("rejects a provenance review date earlier than the recorded date", () => {
+    const entry = { ...validMotor, provenanceRecord: { ...validProvenanceRecord, recordedAt: "2026-09-06", lastReviewedAt: "2026-09-04" } };
+    expect(validateEvidenceEntry(entry).some((issue) => issue.field === "provenanceRecord.lastReviewedAt")).toBe(true);
+  });
+
+  it("rejects a malformed source snapshot hash", () => {
+    const entry = { ...validMotor, source: { ...validSource, snapshotHash: "abc" } };
+    expect(validateEvidenceEntry(entry).some((issue) => issue.field === "source.snapshotHash")).toBe(true);
+  });
+
   it("rejects a provenance record without reviewer or change note", () => {
     const entry = { ...validMotor, provenanceRecord: { ...validProvenanceRecord, reviewedBy: "", changeNote: "" } };
     const fields = validateEvidenceEntry(entry).map((issue) => issue.field);
@@ -202,6 +213,22 @@ describe("seedEvidence (regression: shipped data must stay fully cited)", () => 
     for (const entry of seedEvidence) {
       expect(entry.source.url.startsWith("https://")).toBe(true);
     }
+  });
+
+  it("every shipped entry carries a valid source snapshot fingerprint", () => {
+    for (const entry of seedEvidence) {
+      expect(hasSourceSnapshot(entry)).toBe(true);
+      expect(entry.source.verifiedFields?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("locks the reviewed T-Motor F60 PRO V KV1950 figures to the corrected manufacturer variant", () => {
+    const entry = seedEvidence.find((item) => item.id === "motor-tmotor-f60prov-2207-5-kv1950");
+    expect(entry?.kind).toBe("motor");
+    if (entry?.kind !== "motor") return;
+    expect(entry.weightG).toBe(33.9);
+    expect(entry.maxPowerW).toBe(1216);
+    expect(entry.kv).toBe(1950);
   });
 
   it("every shipped entry carries a reviewed provenance version", () => {
