@@ -258,6 +258,12 @@ body { background-image: radial-gradient(circle at 50% -10%, rgba(184,255,77,.08
 .config-diff__row--added .config-diff__after { color:#b8ff4d; }
 .config-diff__row--changed .config-diff__before { color:#ffc96b; text-decoration:line-through; opacity:.8; }
 .config-diff__row--changed .config-diff__after { color:#b8ff4d; }
+.config-diff__firmware-toggle { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; padding:.6rem .7rem; margin-bottom:.7rem; border:1px solid rgba(233,246,225,.12); background:#111512; color:#c9d3c5; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.02em; }
+.config-diff__firmware-toggle a { margin-left:auto; display:inline-flex; align-items:center; gap:.3rem; color:#b8ff4d; text-decoration:none; }
+.config-diff__firmware-note { margin:-.3rem 0 .8rem; padding:.6rem .7rem; border-left:2px solid #ffc96b; color:#929a91; font-size:.68rem; line-height:1.5; }
+.config-diff__row > div:nth-child(2) { display:grid; gap:.3rem; }
+.config-diff__check { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.config-diff__check small { color:#758075; font-family:var(--font-mono); font-size:.6rem; }
 .config-diff__other { margin-top:1rem; padding-top:.85rem; border-top:1px solid var(--border); display:grid; gap:.4rem; }
 .config-diff__other-line { display:flex; align-items:center; gap:.6rem; margin:0; color:#aab5a7; font-family:var(--font-mono); font-size:.66rem; }
 .config-diff__other-line code { color:#d5e1ce; }
