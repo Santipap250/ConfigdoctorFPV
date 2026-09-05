@@ -11,6 +11,8 @@ import { ValidationPanel } from "@/components/ValidationPanel";
 import type { ToolGroup } from "@/components/ToolCenter";
 import { format } from "@/lib/format";
 import { calculateMetrics, defaultProfile, generateCliDraft, type DroneProfile, type FlightStyle, validateProfile } from "@/lib/drone";
+import { seedEvidence } from "@/lib/evidence-data";
+import { assessProfileEvidence } from "@/lib/evidence-links";
 
 // Tools and Config are not needed for the initial Home/Workbench experience,
 // so they load on demand as separate chunks the first time a user navigates
@@ -30,6 +32,9 @@ const toolGroups: ToolGroup[] = [
 ];
 
 const navigationTargets: Record<string, WorkspaceView> = { "OPEN WORKBENCH": "workbench", "BUILD MY DRONE": "workbench", ANALYZE: "tools", "VIEW CONFIG": "cli" };
+
+const motorEvidenceOptions = ["", ...seedEvidence.filter((entry) => entry.kind === "motor").map((entry) => entry.id)];
+const propEvidenceOptions = ["", ...seedEvidence.filter((entry) => entry.kind === "prop").map((entry) => entry.id)];
 
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -128,6 +133,7 @@ function MissionHome({ onAction, onNavigate, profile, validation }: { onAction: 
 
 function ProfileWorkbench({ profile, update, metrics, validation, onReset, onViewConfig }: { profile: DroneProfile; update: <K extends keyof DroneProfile>(key: K, value: DroneProfile[K]) => void; metrics: ReturnType<typeof calculateMetrics>; validation: ReturnType<typeof validateProfile>; onReset: () => void; onViewConfig: () => void }) {
   const showRatio = metrics.thrustToWeight !== null;
+  const evidenceChecks = assessProfileEvidence(profile, seedEvidence);
   const errorFor = (title: string) => validation.find((item) => item.title === title)?.title;
   return <div className="workbench-page page-enter">
     <header className="mission-header"><div><div className="eyebrow"><i />PROJECT / ACTIVE PROFILE</div><h1>FPV <em>Workbench</em></h1><p>Values are kept in this browser until you export or replace them.</p></div><div className="mission-header__actions"><button className="button button--ghost" onClick={onReset}><RotateCcw size={16} /> RESTORE</button><button className="button button--primary" onClick={onViewConfig}>REVIEW CONFIG <ArrowRight size={16} /></button></div></header>
@@ -138,8 +144,10 @@ function ProfileWorkbench({ profile, update, metrics, validation, onReset, onVie
           <SelectField label="FLIGHT STYLE" value={profile.flightStyle} onChange={(value) => update("flightStyle", value as FlightStyle)} options={["Freestyle", "Cinematic", "Long range", "Racing"]} />
           <Field label="FRAME" value={profile.frame} onChange={(value) => update("frame", value)} />
           <Field label="MOTOR" value={profile.motor} onChange={(value) => update("motor", value)} />
+          <SelectField label="MOTOR EVIDENCE" value={profile.motorEvidenceId ?? ""} onChange={(value) => update("motorEvidenceId", value || undefined)} options={motorEvidenceOptions} optionLabels={motorEvidenceOptions.map((id) => id ? seedEvidence.find((entry) => entry.id === id)?.version ?? id : "None linked")} />
           <NumberField label="MOTOR KV" value={profile.motorKv} unit="KV" onChange={(value) => update("motorKv", value)} />
           <Field label="PROP" value={profile.prop} onChange={(value) => update("prop", value)} />
+          <SelectField label="PROP EVIDENCE" value={profile.propEvidenceId ?? ""} onChange={(value) => update("propEvidenceId", value || undefined)} options={propEvidenceOptions} optionLabels={propEvidenceOptions.map((id) => id ? seedEvidence.find((entry) => entry.id === id)?.version ?? id : "None linked")} />
           <NumberField label="BATTERY" value={profile.batteryCells} unit="S" step="1" error={errorFor("Battery cell count is invalid")} onChange={(value) => update("batteryCells", value)} />
           <NumberField label="CAPACITY" value={profile.capacityMah} unit="mAh" source="ENTERED" error={errorFor("Battery capacity is required")} onChange={(value) => update("capacityMah", value)} />
           <NumberField label="C RATING" value={profile.batteryC} unit="C" onChange={(value) => update("batteryC", value)} />
@@ -153,11 +161,23 @@ function ProfileWorkbench({ profile, update, metrics, validation, onReset, onVie
       <aside className="result-deck"><div className="result-deck__image"><img src="/assets/obix-workbench-visual.webp" alt="FPV drone on a calibration platform" /><div><span>PROJECT SIGNAL</span><strong>LIVE INPUTS</strong></div></div><div className="metric-grid"><MetricCard icon={BatteryCharging} label="NOMINAL PACK" value={format(metrics.voltageNominal, 1)} unit="V" note={`${profile.batteryCells || 0} cells × 3.7 V`} accent /><MetricCard icon={Gauge} label="CONTINUOUS LIMIT" value={format(metrics.batteryContinuousA, 0)} unit="A" note={`${format(metrics.capacityAh, 2)} Ah × ${profile.batteryC || 0} C`} /><MetricCard icon={Activity} label="PEAK POWER" value={format(metrics.estimatedPowerW, 0)} unit="W" note="nominal V × entered peak A" /><MetricCard icon={Play} label="FLIGHT TIME" value={format(metrics.estimatedFlightMinutes, 1)} unit="min" note="80% capacity ÷ avg. current" /></div><div className="ratio-panel"><div><span className="panel-label">THRUST / WEIGHT</span><strong>{showRatio ? `${format(metrics.thrustToWeight, 2)}:1` : "INPUT REQUIRED"}</strong><p>{showRatio ? `${format(metrics.totalThrustG, 0)} g total measured thrust ÷ ${profile.weightG || 0} g all-up weight.` : "Enter verified thrust per motor; OBIX does not guess this value."}</p></div><Gauge size={25} /></div><TelemetryChart currentA={profile.expectedPeakCurrentA} voltageV={metrics.voltageNominal} /></aside>
     </div>
     <ValidationPanel validation={validation} />
+    <section className="validation-panel" aria-labelledby="evidence-link-title"><div className="panel-heading"><div><span className="panel-index">02</span><h2 id="evidence-link-title">Evidence linkage</h2></div><StatusBadge level={evidenceChecks.some((check) => check.level === "critical") ? "critical" : evidenceChecks.some((check) => check.level === "warning") ? "warning" : "pass"}>{evidenceChecks.some((check) => check.level === "critical") ? "REVIEW REQUIRED" : evidenceChecks.some((check) => check.level === "warning") ? "PARTIAL" : "MATCHED"}</StatusBadge></div><p className="panel-intro">Only explicitly linked evidence is evaluated here. Unknown means OBIX has no verified source to assert compatibility.</p><div className="readiness-reasons__list">{evidenceChecks.map((check) => <div className={`readiness-reason ${check.level}`} key={check.id}><i /><div><strong>{check.label}</strong><small>{check.status}</small><p>{check.detail}</p>{check.evidenceId ? <em>Evidence ID: {check.evidenceId}</em> : null}</div></div>)}</div></section>
   </div>;
 }
 
 function Field({ label, value, onChange, error }: { label: string; value: string; onChange: (value: string) => void; error?: string }) { return <label className="field"><span>{label}</span><input aria-label={label} aria-invalid={Boolean(error)} value={value} onChange={(event) => onChange(event.target.value)} />{error ? <small className="field-error">{error}</small> : null}</label>; }
 function NumberField({ label, value, unit, onChange, step = "any", error, source }: { label: string; value: number; unit: string; onChange: (value: number) => void; step?: string; error?: string; source?: string }) { return <label className="field"><span>{label}{source ? <small className="field-source">{source}</small> : null}</span><div className="input-with-unit"><input aria-label={label} aria-invalid={Boolean(error)} type="number" min="0" step={step} value={value || ""} onChange={(event) => onChange(Number(event.target.value))} /><b>{unit}</b></div>{error ? <small className="field-error">{error}</small> : null}</label>; }
-function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) { return <label className="field"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>; }
+function SelectField({ label, value, options, optionLabels, onChange }: { label: string; value: string; options: string[]; optionLabels?: string[]; onChange: (value: string) => void }) { return <label className="field"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option, index) => <option key={option} value={option}>{optionLabels?.[index] ?? option}</option>)}</select></label>; }
 
-function CommandPalette({ onClose, onAction }: { onClose: () => void; onAction: (view: WorkspaceView) => void }) { const entries: { label: string; description: string; view: WorkspaceView; icon: typeof Gauge }[] = [{ label: "Open Workbench", description: "Edit active drone profile", view: "workbench", icon: Gauge }, { label: "Explore Tools", description: "Available and planned modules", view: "tools", icon: Wrench }, { label: "Review Config", description: "Validate and export CLI draft", view: "cli", icon: Terminal }, { label: "Mission Control", description: "Return to launch view", view: "home", icon: Sparkles }]; return <div className="command-overlay" role="dialog" aria-modal="true" aria-label="Command palette" onMouseDown={onClose}><section className="command-palette" onMouseDown={(event) => event.stopPropagation()}><div className="command-palette__search"><Search size={18} /><input autoFocus placeholder="Search a command" /><kbd>ESC</kbd></div><div className="command-palette__label">QUICK ACTIONS</div>{entries.map(({ label, description, view, icon: Icon }) => <button key={view} onClick={() => onAction(view)}><span><Icon size={17} /></span><div><strong>{label}</strong><small>{description}</small></div><Command size={15} /></button>)}<footer><span>Navigate with keyboard</span><span><kbd>⌘</kbd><kbd>K</kbd></span></footer></section></div>; }
+function CommandPalette({ onClose, onAction }: { onClose: () => void; onAction: (view: WorkspaceView) => void }) {
+  const entries: { label: string; description: string; view: WorkspaceView; icon: typeof Gauge }[] = [
+    { label: "Open Workbench", description: "Edit active drone profile", view: "workbench", icon: Gauge },
+    { label: "Explore Tools", description: "Available and planned modules", view: "tools", icon: Wrench },
+    { label: "Review Config", description: "Validate and export CLI draft", view: "cli", icon: Terminal },
+    { label: "Mission Control", description: "Return to launch view", view: "home", icon: Sparkles },
+  ];
+  const [query, setQuery] = useState("");
+  const filtered = entries.filter((entry) => `${entry.label} ${entry.description}`.toLowerCase().includes(query.trim().toLowerCase()));
+  useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler); }, [onClose]);
+  return <div className="command-overlay" role="dialog" aria-modal="true" aria-label="Command palette" onMouseDown={onClose}><section className="command-palette" onMouseDown={(event) => event.stopPropagation()}><div className="command-palette__search"><Search size={18} /><input autoFocus placeholder="Search a command" value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>ESC</kbd></div><div className="command-palette__label">QUICK ACTIONS</div>{filtered.length ? filtered.map(({ label, description, view, icon: Icon }) => <button key={view} onClick={() => onAction(view)}><span><Icon size={17} /></span><div><strong>{label}</strong><small>{description}</small></div><Command size={15} /></button>) : <div className="command-empty">No matching command.</div>}<footer><span>Navigate with keyboard</span><span><kbd>⌘</kbd><kbd>K</kbd></span></footer></section></div>;
+}
