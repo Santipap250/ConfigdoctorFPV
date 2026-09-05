@@ -1,5 +1,6 @@
 import { Check, ChevronRight, Copy, Download } from "lucide-react";
 import { ValidationPanel } from "@/components/ValidationPanel";
+import { ConfigDiffTool } from "@/components/ConfigDiffTool";
 import { format } from "@/lib/format";
 import { summarizeProfile, type calculateMetrics, type DroneProfile, type validateProfile } from "@/lib/drone";
 
@@ -30,6 +31,7 @@ export function ConfigCenter({ profile, metrics, validation, cli, copied, onCopy
           <ValidationPanel validation={validation} compact />
         </aside>
       </div>
+      <ConfigDiffTool currentDraft={cli} />
     </div>
   );
 }
