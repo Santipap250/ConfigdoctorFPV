@@ -19,6 +19,14 @@ const validSource = {
   retrievedDate: "2026-09-04",
 };
 
+const validProvenanceRecord = {
+  schemaVersion: "1.0" as const,
+  recordedAt: "2026-09-04",
+  lastReviewedAt: "2026-09-06",
+  reviewedBy: "OBIX evidence review",
+  changeNote: "Initial cited reference capture.",
+};
+
 const validMotor: MotorEvidence = {
   id: "motor-1",
   kind: "motor",
@@ -26,6 +34,7 @@ const validMotor: MotorEvidence = {
   model: "EX2207",
   kv: 1750,
   provenance: "reference",
+  provenanceRecord: validProvenanceRecord,
   source: validSource,
 };
 
@@ -38,6 +47,7 @@ const validProp: PropEvidence = {
   pitchInch: 4.6,
   blades: 3,
   provenance: "reference",
+  provenanceRecord: validProvenanceRecord,
   source: validSource,
 };
 
@@ -90,6 +100,24 @@ describe("validateEvidenceEntry", () => {
   it("rejects an unrecognized provenance value", () => {
     const entry = { ...validMotor, provenance: "guessed" } as unknown as MotorEvidence;
     expect(isEvidenceEntryValid(entry)).toBe(false);
+  });
+
+  it("rejects an entry without a versioned provenance record", () => {
+    const entry = { ...validMotor, provenanceRecord: undefined } as unknown as MotorEvidence;
+    const issues = validateEvidenceEntry(entry);
+    expect(issues.some((issue) => issue.field === "provenanceRecord")).toBe(true);
+    expect(isEvidenceEntryValid(entry)).toBe(false);
+  });
+
+  it("rejects an invalid provenance schema version", () => {
+    const entry = { ...validMotor, provenanceRecord: { ...validProvenanceRecord, schemaVersion: "2.0" } } as unknown as MotorEvidence;
+    expect(validateEvidenceEntry(entry).some((issue) => issue.field === "provenanceRecord.schemaVersion")).toBe(true);
+  });
+
+  it("rejects a provenance record without reviewer or change note", () => {
+    const entry = { ...validMotor, provenanceRecord: { ...validProvenanceRecord, reviewedBy: "", changeNote: "" } };
+    const fields = validateEvidenceEntry(entry).map((issue) => issue.field);
+    expect(fields).toEqual(expect.arrayContaining(["provenanceRecord.reviewedBy", "provenanceRecord.changeNote"]));
   });
 
   it("rejects an entry missing manufacturer or model", () => {
@@ -173,6 +201,14 @@ describe("seedEvidence (regression: shipped data must stay fully cited)", () => 
   it("every shipped entry cites a checkable http(s) url", () => {
     for (const entry of seedEvidence) {
       expect(entry.source.url.startsWith("https://")).toBe(true);
+    }
+  });
+
+  it("every shipped entry carries a reviewed provenance version", () => {
+    for (const entry of seedEvidence) {
+      expect(entry.provenanceRecord.schemaVersion).toBe("1.0");
+      expect(entry.provenanceRecord.lastReviewedAt).toBe("2026-09-06");
+      expect(entry.provenanceRecord.reviewedBy).toBeTruthy();
     }
   });
 });

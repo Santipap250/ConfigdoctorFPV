@@ -303,3 +303,6 @@ body { background-image: radial-gradient(circle at 50% -10%, rgba(184,255,77,.08
 
 /* Production form feedback */
 .field > span { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }.field-source { color:var(--muted); font-family:var(--font-mono); font-size:.52rem; letter-spacing:.04em; }.field input[aria-invalid="true"], .field select[aria-invalid="true"] { border-color:rgba(255,126,112,.8); box-shadow:0 0 0 2px rgba(255,126,112,.12); }.field-error { display:block; margin-top:.35rem; color:#ff9b8f; font-family:var(--font-mono); font-size:.56rem; line-height:1.35; }
+
+/* Provenance versioning metadata */
+.evidence-row__version { color: var(--muted); font-family: var(--font-mono); font-size: .55rem; letter-spacing: .03em; }
