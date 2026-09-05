@@ -19,7 +19,7 @@ export function WorkbenchShell({ activeView, onNavigate, onOpenPalette, children
         <nav className="rail-nav">
           {navigation.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => onNavigate(id)} className={`rail-link ${activeView === id ? "is-active" : ""}`}><Icon size={18} /><span>{label}</span></button>)}
         </nav>
-        <div className="rail-foot"><span className="rail-health"><i />SYSTEM NOMINAL</span><button className="icon-button" aria-label="Settings"><Settings2 size={18} /></button></div>
+        <div className="rail-foot"><span className="rail-health"><i />SYSTEM NOMINAL</span><button className="icon-button" aria-label="Settings" onClick={onOpenPalette}><Settings2 size={18} /></button></div>
       </aside>
       <header className="mobile-mission-strip"><BrandMark label={false} /><button className="palette-trigger" onClick={onOpenPalette}><Menu size={18} /><span>COMMAND</span></button></header>
       <main className="work-surface">{children}</main>

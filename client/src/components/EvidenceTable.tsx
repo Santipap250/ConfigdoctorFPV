@@ -100,7 +100,7 @@ export function EvidenceTable() {
               <div className="evidence-row__provenance">
                 <StatusBadge level={provenanceToLevel[entry.provenance]}>{provenanceBadge(entry.provenance)}</StatusBadge>
                 <small>{provenanceLabel(entry.provenance)}</small>
-                <small className="evidence-row__version">PROVENANCE v{entry.provenanceRecord.schemaVersion} · reviewed {entry.provenanceRecord.lastReviewedAt}</small>
+                <small className="evidence-row__version">PROVENANCE v{entry.provenanceRecord.schemaVersion} · reviewed {entry.provenanceRecord.lastReviewedAt}</small>{entry.source.snapshotHash ? <small className="evidence-row__version">SNAPSHOT SHA-256 · {entry.source.snapshotHash.slice(0, 12)}…</small> : null}
               </div>
               <div className="evidence-row__source">
                 <a href={entry.source.url} target="_blank" rel="noreferrer noopener">
