@@ -66,4 +66,14 @@ test.describe("OBIX production smoke", () => {
     await page.getByRole("button", { name: "USE CURRENT DRAFT" }).first().click();
     await expect(page.getByLabel("Before CLI text")).not.toHaveValue("");
   });
+
+  test("Config Diff firmware check is off by default and flags an out-of-range value when enabled", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Config", exact: true }).click();
+    await page.getByLabel("Before CLI text").fill("set dyn_notch_count = 3");
+    await page.getByLabel("After CLI text").fill("set dyn_notch_count = 12");
+    await expect(page.getByText("NOT VALIDATED")).toHaveCount(0);
+    await page.getByText(/Check "after" values against/).click();
+    await expect(page.getByText("OUTSIDE DOCUMENTED RANGE", { exact: true })).toBeVisible();
+  });
 });
