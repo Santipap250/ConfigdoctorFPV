@@ -17,9 +17,13 @@ OBIXCONFIGDOCTORFPV is a static React application built with Vite and TypeScript
 - **Optional analytics.** `client/src/lib/analytics.ts` only injects the (currently unconfigured) Umami script when both `VITE_ANALYTICS_ENDPOINT` and `VITE_ANALYTICS_WEBSITE_ID` are set at build time; see `.env.example`. There is no static `%VITE_*%` placeholder in `index.html` — that pattern produces an "undefined env var" build warning and ships a literal, broken script tag whenever the vars are unset.
 - **pnpm install scripts.** Only `@tailwindcss/oxide` and `esbuild` are allowed to run their install scripts (`package.json`'s `pnpm.onlyBuiltDependencies`) — both fetch/link a required prebuilt native binary. This is an explicit allow-list, not a blanket `--ignore-scripts` bypass; add a new entry only when a specific dependency is confirmed to need it.
 
+## Phase 4 profile vault
+
+The Profile Vault (`components/ProfileVault.tsx` + `lib/profile-vault.ts`) owns multi-build persistence in browser local storage under `obix-profile-vault`. Records wrap the existing `DroneProfile` as a serializable payload with stable IDs, timestamps, favorite state, and revision counters. JSON export/import is the portability boundary. Import is merge-oriented so unrelated local profiles are retained. No network upload or account state is inferred.
+
 ## Extension path
 
-When user accounts are introduced, `DroneProfile` becomes the shared payload for saved builds and cloud synchronization. Individual tool domains should remain separate pure modules, for example `lib/analyzers/motor.ts`, `battery.ts`, and `pid.ts`, each with its own evidence source and tests. File import, blackbox parsing, plugins, API access, and community presets require a server-side capability and must not be simulated in the static client.
+When authenticated user accounts are introduced, the existing `DroneProfile` payload and vault record shape become the shared payload for saved builds and cloud synchronization. Individual tool domains should remain separate pure modules, for example `lib/analyzers/motor.ts`, `battery.ts`, and `pid.ts`, each with its own evidence source and tests. File import, blackbox parsing, plugins, API access, and community presets require a server-side capability and must not be simulated in the static client.
 
 ## Safety boundaries
 
