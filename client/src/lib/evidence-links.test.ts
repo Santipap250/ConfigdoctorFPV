@@ -6,13 +6,13 @@ import { defaultProfile } from "./drone";
 describe("assessProfileEvidence", () => {
   it("reports unknown when no evidence is linked", () => {
     const checks = assessProfileEvidence(defaultProfile, seedEvidence);
-    expect(checks.find((check) => check.id === "motor-evidence")?.status).toBe("UNKNOWN");
-    expect(checks.find((check) => check.id === "prop-evidence")?.status).toBe("UNKNOWN");
+    expect(checks.find((check) => check.id === "motor-link")?.status).toBe("UNKNOWN");
+    expect(checks.find((check) => check.id === "prop-link")?.status).toBe("UNKNOWN");
   });
 
   it("matches an explicitly linked prop evidence record", () => {
     const profile = { ...defaultProfile, propEvidenceId: "prop-gemfan-hurricane-51466-v2" };
-    expect(assessProfileEvidence(profile, seedEvidence).find((check) => check.id === "prop-evidence")?.status).toBe("MATCHED");
+    expect(assessProfileEvidence(profile, seedEvidence).find((check) => check.id === "prop-link")?.status).toBe("VERIFIED MATCH");
   });
 
   it("flags a linked motor evidence record when the profile battery is outside the documented source range", () => {
