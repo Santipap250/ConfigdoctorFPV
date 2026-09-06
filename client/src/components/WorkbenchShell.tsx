@@ -1,14 +1,15 @@
 /** Flight Deck Atelier component: shared instrument rail and mobile command bar for every product surface. */
-import { Activity, Box, Command, Compass, Gauge, Menu, Settings2, Wrench } from "lucide-react";
+import { Activity, Box, Command, Compass, Gauge, Menu, Settings2, Wrench, LibraryBig } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 
-export type WorkspaceView = "home" | "workbench" | "tools" | "cli";
+export type WorkspaceView = "home" | "workbench" | "tools" | "cli" | "vault";
 
 const navigation: { id: WorkspaceView; label: string; icon: typeof Compass }[] = [
   { id: "home", label: "Mission", icon: Compass },
   { id: "workbench", label: "Workbench", icon: Gauge },
   { id: "tools", label: "Tools", icon: Wrench },
   { id: "cli", label: "Config", icon: Command },
+  { id: "vault", label: "Vault", icon: LibraryBig },
 ];
 
 export function WorkbenchShell({ activeView, onNavigate, onOpenPalette, children }: { activeView: WorkspaceView; onNavigate: (view: WorkspaceView) => void; onOpenPalette: () => void; children: React.ReactNode }) {
