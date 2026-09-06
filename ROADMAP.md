@@ -8,6 +8,10 @@ The initial release ships the profile schema, local persistence, transparent bat
 
 The production-hardening pass adds a frozen pnpm workspace configuration, GitHub Actions checks for every push and pull request, Playwright smoke coverage for the primary user flows, accessible inline field validation, and explicit entered/estimated/measured data provenance labels.
 
+## Phase 4 — Profile Vault / delivered foundation
+
+Phase 4 adds a local-first multi-build vault: saved drone profiles, active-profile switching, duplication, favorites, revision counters, JSON import/export, merge-safe restore, and an explicit boundary that no cloud account or network synchronization is being simulated. The vault uses the existing `DroneProfile` payload so a future authenticated API can be introduced without changing the local file contract.
+
 ## Next domains
 
 | Priority | Domain | Preconditions |
@@ -16,7 +20,7 @@ The production-hardening pass adds a frozen pnpm workspace configuration, GitHub
 | — | ~~Config diff~~ — delivered as a structural CLI text diff (Config view). Firmware-specific *validation* of diffed parameters is intentionally out of scope until the item below is unblocked. | — |
 | — | ~~Firmware-specific config validation~~ — delivered as an optional, off-by-default check in the Config Diff tool against a curated Betaflight 2025.12 parameter schema (~70 parameters, sourced from Betaflight's own official CLI reference). Explicitly version-scoped: a key outside the schema is always reported "not validated," never guessed; a flagged value is reported only as outside *that version's* documented range, never as unsafe. Extending to other firmware versions needs the same sourcing work repeated per version. | — |
 | — | ~~Evidence-based compatibility engine~~ — delivered in the Workbench: explicit motor/prop evidence linkage, source-declared battery/frame/motor-class constraints, deterministic match/review/outside-range states, and regression coverage. | — |
-| P1 | Saved drone accounts and cloud synchronization | Server, authentication, ownership model and data migration policy |
+| P1 | **Saved drone accounts and cloud synchronization** — Phase 4 local vault foundation delivered; authenticated cloud sync remains the server-side follow-up. | Server, authentication, ownership model and data migration policy |
 | P2 | Blackbox / log analysis | Secure upload flow, parser isolation and transparent calculation methodology |
 | P2 | PID and filter advice | Validated analysis model, supported firmware versions and limits disclosure |
 | P3 | PWA, community presets and sharing | Account permissions, moderation and versioned preset format |

@@ -9,6 +9,7 @@ import { TelemetryChart } from "@/components/TelemetryChart";
 import { WorkbenchShell, type WorkspaceView } from "@/components/WorkbenchShell";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { CompatibilityPanel } from "@/components/CompatibilityPanel";
+import { ProfileVault } from "@/components/ProfileVault";
 import type { ToolGroup } from "@/components/ToolCenter";
 import { format } from "@/lib/format";
 import { calculateMetrics, defaultProfile, generateCliDraft, type DroneProfile, type FlightStyle, validateProfile } from "@/lib/drone";
@@ -31,7 +32,7 @@ const toolGroups: ToolGroup[] = [
   { group: "CONFIG", tools: [{ name: "Config Builder", detail: "CLI draft + checks", active: true, icon: Terminal }, { name: "Config Validator", detail: "Input integrity", active: true, icon: ShieldCheck }, { name: "Config Diff", detail: "Structural CLI comparison", active: true, icon: ClipboardCheck }] },
 ];
 
-const navigationTargets: Record<string, WorkspaceView> = { "OPEN WORKBENCH": "workbench", "BUILD MY DRONE": "workbench", ANALYZE: "tools", "VIEW CONFIG": "cli" };
+const navigationTargets: Record<string, WorkspaceView> = { "OPEN WORKBENCH": "workbench", "BUILD MY DRONE": "workbench", ANALYZE: "tools", "VIEW CONFIG": "cli", "OPEN PROFILE VAULT": "vault" };
 
 const motorEvidenceOptions = ["", ...seedEvidence.filter((entry) => entry.kind === "motor").map((entry) => entry.id)];
 const propEvidenceOptions = ["", ...seedEvidence.filter((entry) => entry.kind === "prop").map((entry) => entry.id)];
@@ -101,6 +102,7 @@ export default function Home() {
       {activeView === "workbench" ? <ProfileWorkbench profile={profile} update={update} metrics={metrics} validation={validation} onReset={resetProfile} onViewConfig={() => setActiveView("cli")} /> : null}
       {activeView === "tools" ? <Suspense fallback={<ViewLoading />}><ToolCenter groups={toolGroups} onOpen={openTool} profile={profile} metrics={metrics} /></Suspense> : null}
       {activeView === "cli" ? <Suspense fallback={<ViewLoading />}><ConfigCenter profile={profile} metrics={metrics} validation={validation} cli={cli} copied={copied} onCopy={copyCli} onDownload={() => downloadText(`${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "obix-config"}.txt`, cli)} onWorkbench={() => setActiveView("workbench")} /></Suspense> : null}
+      {activeView === "vault" ? <ProfileVault profile={profile} onLoad={(next) => { setProfile(next); setActiveView("workbench"); }} onNotice={setNotice} /> : null}
       {isPaletteOpen ? <CommandPalette onClose={() => setPaletteOpen(false)} onAction={(view) => { setActiveView(view); setPaletteOpen(false); }} /> : null}
     </WorkbenchShell>
   );
@@ -122,7 +124,7 @@ function MissionHome({ onAction, onNavigate, profile, validation }: { onAction: 
       </div>
       <div className="mission-hero__instruments reveal-item reveal-item--3"><div><span>ACTIVE PROJECT</span><strong>{profile.name}</strong><small>{profile.frame}</small></div><div><span>PACK REFERENCE</span><strong>{profile.batteryCells}S / {format(metrics.voltageNominal, 1)} V</strong><small>{profile.capacityMah} mAh · {profile.batteryC} C entered</small></div><div><span>VALIDATION STATE</span><strong>{critical ? `${critical} FLAG${critical > 1 ? "S" : ""}` : "NOMINAL"}</strong><small>{critical ? "Correct values before export" : "Internal relation check clear"}</small></div></div>
     </section>
-    <div className="mission-status-line reveal-item reveal-item--4" aria-label="Active workspace status"><span><i />WORKSPACE READY</span><span>PROFILE / {profile.name}</span><span>FIRMWARE / {profile.firmware}</span><span>STORAGE / BROWSER LOCAL</span><button onClick={() => onNavigate("workbench")}>OPEN PROFILE DATA <ArrowRight size={13} /></button></div>
+    <div className="mission-status-line reveal-item reveal-item--4" aria-label="Active workspace status"><span><i />WORKSPACE READY</span><span>PROFILE / {profile.name}</span><span>FIRMWARE / {profile.firmware}</span><span>STORAGE / BROWSER LOCAL</span><div className="mission-status-line__actions"><button onClick={() => onNavigate("workbench")}>OPEN PROFILE DATA <ArrowRight size={13} /></button><button onClick={() => onNavigate("vault")}>PROFILE VAULT <ArrowRight size={13} /></button></div></div>
     <section className="quickstrip reveal-item reveal-item--5">
       <div className="section-kicker"><span>01</span><div><small>QUICK START</small><strong>Run a verified operation</strong></div></div>
       <div className="quickstrip__actions">
@@ -179,6 +181,7 @@ function CommandPalette({ onClose, onAction }: { onClose: () => void; onAction: 
     { label: "Explore Tools", description: "Available and planned modules", view: "tools", icon: Wrench },
     { label: "Review Config", description: "Validate and export CLI draft", view: "cli", icon: Terminal },
     { label: "Mission Control", description: "Return to launch view", view: "home", icon: Sparkles },
+    { label: "Profile Vault", description: "Save, duplicate, import and export drone builds", view: "vault", icon: Box },
   ];
   const [query, setQuery] = useState("");
   const filtered = entries.filter((entry) => `${entry.label} ${entry.description}`.toLowerCase().includes(query.trim().toLowerCase()));
