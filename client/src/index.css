@@ -344,3 +344,17 @@ body { background-image: radial-gradient(circle at 50% -10%, rgba(184,255,77,.08
 @media (max-width:1100px) { .vault-banner { grid-template-columns:repeat(3,minmax(7rem,1fr)); }.vault-banner__copy { grid-column:1 / -1; border-top:1px solid var(--border); }.vault-grid { grid-template-columns:1fr; } }
 @media (max-width:760px) { .vault-toolbar { align-items:stretch; flex-direction:column; }.vault-toolbar__actions { display:grid; grid-template-columns:1fr 1fr; }.vault-search { max-width:none; }.vault-banner { grid-template-columns:repeat(3,1fr); }.vault-banner__signal { min-height:4.5rem; padding:.7rem; }.vault-banner__signal strong { font-size:1.15rem; }.vault-future { align-items:flex-start; flex-direction:column; }.mission-status-line__actions { margin-left:0; } }
 @media (max-width:520px) { .vault-banner { grid-template-columns:1fr 1fr; }.vault-banner__signal:nth-child(3) { border-top:1px solid var(--border); }.vault-banner__copy { padding:.8rem; }.vault-grid { gap:.7rem; }.vault-list,.vault-inspector { padding:.8rem; }.vault-spec-grid { grid-template-columns:1fr; }.vault-identity { grid-template-columns:4rem 1fr; }.vault-toolbar__actions { grid-template-columns:1fr; }.vault-card__actions { flex-direction:column; } }
+
+/* Progressive install surface */
+.mobile-strip-actions { display:flex; align-items:center; gap:.45rem; }
+.install-button { display:inline-flex; align-items:center; justify-content:center; gap:.38rem; min-height:2rem; padding:.38rem .58rem; border:1px solid rgba(184,255,77,.3); background:rgba(184,255,77,.07); color:#caff80; font:600 .52rem var(--font-mono); letter-spacing:.08em; white-space:nowrap; transition:background .18s ease, border-color .18s ease, transform .18s ease; }
+.install-button:hover { border-color:rgba(184,255,77,.65); background:rgba(184,255,77,.14); }
+.install-button:active { transform:scale(.97); }
+.rail-foot .install-button { width:100%; margin-bottom:.7rem; }
+.install-help { position:fixed; z-index:30; right:1.1rem; bottom:1.1rem; display:flex; align-items:flex-start; gap:.8rem; max-width:20rem; padding:.85rem 1rem; border:1px solid rgba(184,255,77,.3); background:rgba(16,19,17,.96); box-shadow:0 1rem 3rem rgba(0,0,0,.36); color:#dfe8dc; }
+.install-help strong { display:block; color:#caff80; font:600 .7rem var(--font-display); }
+.install-help p { display:flex; align-items:center; gap:.25rem; margin:.35rem 0 0; color:#9ca89e; font:.58rem var(--font-mono); line-height:1.5; }
+.install-help p svg { color:#caff80; flex:none; }
+.install-help button { display:grid; place-items:center; border:0; background:transparent; color:#7e8b80; }
+.install-help button:hover { color:#eaf2e8; }
+@media (max-width:760px) { .rail-foot .install-button { display:none; } .mobile-mission-strip .install-button span { display:none; } .mobile-mission-strip .install-button { width:2rem; padding:.38rem; } .install-help { right:.75rem; bottom:5.4rem; left:.75rem; max-width:none; } }
