@@ -44,6 +44,24 @@ test.describe("OBIX production smoke", () => {
     await expect(page.getByText("No cited entries match this filter.")).toBeVisible();
   });
 
+  test("Workbench exposes evidence-based compatibility and stays unknown until evidence is linked", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Workbench", exact: true }).click();
+    await expect(page.getByRole("heading", { name: /Compatibility with documented evidence/ })).toBeVisible();
+    await expect(page.getByText("source-linked only", { exact: true })).toBeVisible();
+    await expect(page.getByText("No motor evidence is explicitly linked.", { exact: false })).toBeVisible();
+  });
+
+  test("Compatibility engine reports a documented match only after explicit evidence links are selected", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Workbench", exact: true }).click();
+    await page.getByLabel("MOTOR EVIDENCE").selectOption("motor-tmotor-f60prov-2207-5-kv1750");
+    await page.getByLabel("PROP EVIDENCE").selectOption("prop-gemfan-hurricane-51466-v2");
+    await expect(page.getByText("DOCUMENTED MATCH", { exact: true })).toBeVisible();
+    await expect(page.getByText("The profile battery is 6S and falls within the source-declared 4–6S range.", { exact: true })).toBeVisible();
+    await expect(page.getByText("The linked motor stator class 2207.5 falls within the source-declared 2207–2306 class.", { exact: true })).toBeVisible();
+  });
+
   test("Config Diff stays empty until both sides have text", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Config", exact: true }).click();

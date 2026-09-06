@@ -66,6 +66,8 @@ export type MotorEvidence = EvidenceBase & {
   maxPowerW?: number;
   maxPowerDurationS?: number;
   ratedVoltage?: string;
+  /** Structured manufacturer compatibility claims captured from the same cited source. */
+  matchingFrameInch?: number;
 };
 
 export type PropEvidence = EvidenceBase & {
@@ -76,6 +78,9 @@ export type PropEvidence = EvidenceBase & {
   material?: string;
   weightG?: number;
   hubBoreMm?: number;
+  /** Structured manufacturer motor-class compatibility claim captured from the same cited source. */
+  adaptiveMotorStatorMin?: number;
+  adaptiveMotorStatorMax?: number;
 };
 
 export type HardwareEvidence = MotorEvidence | PropEvidence;
@@ -171,10 +176,14 @@ export function validateEvidenceEntry(entry: HardwareEvidence): EvidenceIssue[] 
   if (entry.kind === "motor") {
     if (!isFinitePositive(entry.kv)) issues.push({ field: "kv", message: "KV must be a positive number." });
     if (entry.weightG !== undefined && !isFinitePositive(entry.weightG)) issues.push({ field: "weightG", message: "Weight must be a positive number when supplied." });
+    if (entry.matchingFrameInch !== undefined && !isFinitePositive(entry.matchingFrameInch)) issues.push({ field: "matchingFrameInch", message: "matchingFrameInch must be positive when supplied." });
   } else if (entry.kind === "prop") {
     if (!isFinitePositive(entry.diameterInch)) issues.push({ field: "diameterInch", message: "Diameter must be a positive number." });
     if (!isFinitePositive(entry.pitchInch)) issues.push({ field: "pitchInch", message: "Pitch must be a positive number." });
     if (!isFinitePositive(entry.blades)) issues.push({ field: "blades", message: "Blade count must be a positive number." });
+    if (entry.adaptiveMotorStatorMin !== undefined && !isFinitePositive(entry.adaptiveMotorStatorMin)) issues.push({ field: "adaptiveMotorStatorMin", message: "adaptiveMotorStatorMin must be positive when supplied." });
+    if (entry.adaptiveMotorStatorMax !== undefined && !isFinitePositive(entry.adaptiveMotorStatorMax)) issues.push({ field: "adaptiveMotorStatorMax", message: "adaptiveMotorStatorMax must be positive when supplied." });
+    if (entry.adaptiveMotorStatorMin !== undefined && entry.adaptiveMotorStatorMax !== undefined && entry.adaptiveMotorStatorMin > entry.adaptiveMotorStatorMax) issues.push({ field: "adaptiveMotorStatorMax", message: "adaptiveMotorStatorMax cannot be lower than adaptiveMotorStatorMin." });
   } else {
     issues.push({ field: "kind", message: "kind must be 'motor' or 'prop'." });
   }

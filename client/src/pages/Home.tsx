@@ -8,11 +8,11 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { TelemetryChart } from "@/components/TelemetryChart";
 import { WorkbenchShell, type WorkspaceView } from "@/components/WorkbenchShell";
 import { ValidationPanel } from "@/components/ValidationPanel";
+import { CompatibilityPanel } from "@/components/CompatibilityPanel";
 import type { ToolGroup } from "@/components/ToolCenter";
 import { format } from "@/lib/format";
 import { calculateMetrics, defaultProfile, generateCliDraft, type DroneProfile, type FlightStyle, validateProfile } from "@/lib/drone";
 import { seedEvidence } from "@/lib/evidence-data";
-import { assessProfileEvidence } from "@/lib/evidence-links";
 
 // Tools and Config are not needed for the initial Home/Workbench experience,
 // so they load on demand as separate chunks the first time a user navigates
@@ -27,7 +27,7 @@ function ViewLoading() {
 const toolGroups: ToolGroup[] = [
   { group: "BUILD", tools: [{ name: "Drone Builder", detail: "Profile data model", active: true, icon: Box }, { name: "Weight Calculator", detail: "Profile mass field", active: true, icon: Gauge }, { name: "Battery Calculator", detail: "Load & duration", active: true, icon: BatteryCharging }] },
   { group: "TUNING", tools: [{ name: "PID Advisor", detail: "Architecture ready", active: false, icon: SlidersHorizontal }, { name: "Filter Advisor", detail: "Architecture ready", active: false, icon: Radar }, { name: "Rates Visualizer", detail: "Architecture ready", active: false, icon: Activity }] },
-  { group: "ANALYSIS", tools: [{ name: "Thrust Analyzer", detail: "Measured data input", active: true, icon: Gauge }, { name: "Motor & Prop Evidence", detail: "Cited evidence tables", active: true, icon: Wrench }, { name: "Blackbox Analyzer", detail: "Import flow planned", active: false, icon: Layers3 }] },
+  { group: "ANALYSIS", tools: [{ name: "Thrust Analyzer", detail: "Measured data input", active: true, icon: Gauge }, { name: "Motor & Prop Evidence", detail: "Cited evidence tables", active: true, icon: Wrench }, { name: "Compatibility Check", detail: "Evidence-linked matching", active: true, icon: ShieldCheck }, { name: "Blackbox Analyzer", detail: "Import flow planned", active: false, icon: Layers3 }] },
   { group: "CONFIG", tools: [{ name: "Config Builder", detail: "CLI draft + checks", active: true, icon: Terminal }, { name: "Config Validator", detail: "Input integrity", active: true, icon: ShieldCheck }, { name: "Config Diff", detail: "Structural CLI comparison", active: true, icon: ClipboardCheck }] },
 ];
 
@@ -79,6 +79,11 @@ export default function Home() {
       if (name.includes("Evidence")) {
         setActiveView("tools");
         window.requestAnimationFrame(() => document.getElementById("evidence-tables")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        return;
+      }
+      if (name.includes("Compatibility")) {
+        setActiveView("workbench");
+        window.requestAnimationFrame(() => document.getElementById("compatibility-engine")?.scrollIntoView({ behavior: "smooth", block: "start" }));
         return;
       }
       setActiveView("workbench");
@@ -133,7 +138,6 @@ function MissionHome({ onAction, onNavigate, profile, validation }: { onAction: 
 
 function ProfileWorkbench({ profile, update, metrics, validation, onReset, onViewConfig }: { profile: DroneProfile; update: <K extends keyof DroneProfile>(key: K, value: DroneProfile[K]) => void; metrics: ReturnType<typeof calculateMetrics>; validation: ReturnType<typeof validateProfile>; onReset: () => void; onViewConfig: () => void }) {
   const showRatio = metrics.thrustToWeight !== null;
-  const evidenceChecks = assessProfileEvidence(profile, seedEvidence);
   const errorFor = (title: string) => validation.find((item) => item.title === title)?.title;
   return <div className="workbench-page page-enter">
     <header className="mission-header"><div><div className="eyebrow"><i />PROJECT / ACTIVE PROFILE</div><h1>FPV <em>Workbench</em></h1><p>Values are kept in this browser until you export or replace them.</p></div><div className="mission-header__actions"><button className="button button--ghost" onClick={onReset}><RotateCcw size={16} /> RESTORE</button><button className="button button--primary" onClick={onViewConfig}>REVIEW CONFIG <ArrowRight size={16} /></button></div></header>
@@ -161,7 +165,7 @@ function ProfileWorkbench({ profile, update, metrics, validation, onReset, onVie
       <aside className="result-deck"><div className="result-deck__image"><img src="/assets/obix-workbench-visual.webp" alt="FPV drone on a calibration platform" /><div><span>PROJECT SIGNAL</span><strong>LIVE INPUTS</strong></div></div><div className="metric-grid"><MetricCard icon={BatteryCharging} label="NOMINAL PACK" value={format(metrics.voltageNominal, 1)} unit="V" note={`${profile.batteryCells || 0} cells × 3.7 V`} accent /><MetricCard icon={Gauge} label="CONTINUOUS LIMIT" value={format(metrics.batteryContinuousA, 0)} unit="A" note={`${format(metrics.capacityAh, 2)} Ah × ${profile.batteryC || 0} C`} /><MetricCard icon={Activity} label="PEAK POWER" value={format(metrics.estimatedPowerW, 0)} unit="W" note="nominal V × entered peak A" /><MetricCard icon={Play} label="FLIGHT TIME" value={format(metrics.estimatedFlightMinutes, 1)} unit="min" note="80% capacity ÷ avg. current" /></div><div className="ratio-panel"><div><span className="panel-label">THRUST / WEIGHT</span><strong>{showRatio ? `${format(metrics.thrustToWeight, 2)}:1` : "INPUT REQUIRED"}</strong><p>{showRatio ? `${format(metrics.totalThrustG, 0)} g total measured thrust ÷ ${profile.weightG || 0} g all-up weight.` : "Enter verified thrust per motor; OBIX does not guess this value."}</p></div><Gauge size={25} /></div><TelemetryChart currentA={profile.expectedPeakCurrentA} voltageV={metrics.voltageNominal} /></aside>
     </div>
     <ValidationPanel validation={validation} />
-    <section className="validation-panel" aria-labelledby="evidence-link-title"><div className="panel-heading"><div><span className="panel-index">02</span><h2 id="evidence-link-title">Evidence linkage</h2></div><StatusBadge level={evidenceChecks.some((check) => check.level === "critical") ? "critical" : evidenceChecks.some((check) => check.level === "warning") ? "warning" : "pass"}>{evidenceChecks.some((check) => check.level === "critical") ? "REVIEW REQUIRED" : evidenceChecks.some((check) => check.level === "warning") ? "PARTIAL" : "MATCHED"}</StatusBadge></div><p className="panel-intro">Only explicitly linked evidence is evaluated here. Unknown means OBIX has no verified source to assert compatibility.</p><div className="readiness-reasons__list">{evidenceChecks.map((check) => <div className={`readiness-reason ${check.level}`} key={check.id}><i /><div><strong>{check.label}</strong><small>{check.status}</small><p>{check.detail}</p>{check.evidenceId ? <em>Evidence ID: {check.evidenceId}</em> : null}</div></div>)}</div></section>
+    <CompatibilityPanel profile={profile} />
   </div>;
 }
 
