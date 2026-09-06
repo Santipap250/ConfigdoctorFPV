@@ -306,3 +306,25 @@ body { background-image: radial-gradient(circle at 50% -10%, rgba(184,255,77,.08
 
 /* Provenance versioning metadata */
 .evidence-row__version { color: var(--muted); font-family: var(--font-mono); font-size: .55rem; letter-spacing: .03em; }
+
+
+/* Phase 3 — evidence-based compatibility engine */
+.compatibility-panel { margin-top:1.25rem; padding:1.25rem; border:1px solid rgba(233,246,225,.16); background:linear-gradient(140deg,rgba(21,26,23,.98),rgba(13,17,14,.98)); }
+.compatibility-panel__head { display:flex; align-items:flex-start; justify-content:space-between; gap:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+.compatibility-panel__head h2 { margin:.35rem 0 .4rem; font-family:var(--font-display); font-size:clamp(1.25rem,2.6vw,1.85rem); letter-spacing:-.05em; }
+.compatibility-panel__head h2 em { color:#b8ff4d; font-style:normal; }
+.compatibility-panel__head p { max-width:44rem; margin:0; color:#929a91; font-size:.76rem; line-height:1.55; }
+.compatibility-panel__meta { display:flex; flex-wrap:wrap; gap:.8rem; padding:.8rem 0; color:#929a91; font-family:var(--font-mono); font-size:.58rem; letter-spacing:.05em; }
+.compatibility-panel__meta span { display:inline-flex; align-items:center; gap:.35rem; }
+.compatibility-checks { display:grid; gap:.55rem; }
+.compatibility-check { display:grid; grid-template-columns:auto 1fr; gap:.7rem; padding:.8rem .85rem; border:1px solid rgba(233,246,225,.1); background:#111512; }
+.compatibility-check > i { width:.55rem; height:.55rem; margin-top:.28rem; border-radius:50%; background:#929a91; box-shadow:0 0 0 3px rgba(146,154,145,.08); }
+.compatibility-check--pass > i { background:#b8ff4d; box-shadow:0 0 0 3px rgba(184,255,77,.1); }
+.compatibility-check--warning > i { background:#ffc96b; box-shadow:0 0 0 3px rgba(255,201,107,.1); }
+.compatibility-check--critical > i { background:#ff7e70; box-shadow:0 0 0 3px rgba(255,126,112,.1); }
+.compatibility-check strong { display:inline-block; margin-right:.6rem; color:#edf0e7; font-size:.78rem; }
+.compatibility-check small { color:#929a91; font-family:var(--font-mono); font-size:.57rem; letter-spacing:.05em; }
+.compatibility-check p { margin:.3rem 0 0; color:#aab5a7; font-size:.68rem; line-height:1.5; }
+.compatibility-check a { display:inline-flex; align-items:center; gap:.3rem; margin-top:.45rem; color:#b8ff4d; font-family:var(--font-mono); font-size:.58rem; text-decoration:none; }
+.compatibility-panel__disclaimer { margin:1rem 0 0; padding-top:.85rem; border-top:1px solid var(--border); color:#828c83; font-size:.66rem; line-height:1.55; }
+@media (max-width:700px) { .compatibility-panel__head { flex-direction:column; } }
