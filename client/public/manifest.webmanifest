@@ -1,21 +1,32 @@
 {
+  "id": "/",
   "name": "OBIX Config Doctor FPV",
   "short_name": "OBIX FPV",
   "description": "The digital workbench for safety-conscious FPV pilots.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#101311",
   "theme_color": "#101311",
   "icons": [
     {
+      "src": "/assets/obix-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/assets/obix-logo-mark.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/obix-logo-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
-
 
