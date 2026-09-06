@@ -39,7 +39,7 @@ export function normalizeProfileVault(input: unknown): ProfileVault {
     ? raw.profiles.filter((item): item is SavedDroneProfile => {
         if (!item || typeof item !== "object") return false;
         const candidate = item as Partial<SavedDroneProfile>;
-        return typeof candidate.id === "string" && candidate.profile && typeof candidate.profile === "object";
+        return typeof candidate.id === "string" && candidate.profile !== undefined && typeof candidate.profile === "object";
       }).map((item) => ({
         id: item.id,
         name: typeof item.name === "string" ? item.name : item.profile.name || "Unnamed build",
@@ -119,22 +119,14 @@ export function exportProfileVault(vault: ProfileVault): string {
   return JSON.stringify({ ...vault, schema: PROFILE_VAULT_SCHEMA, exportedAt: new Date().toISOString(), product: "OBIXCONFIGDOCTORFPV" }, null, 2);
 }
 
-export function importProfileVault(text: string): ProfileVault {
-  const parsed: unknown = JSON.parse(text);
-  const vault = normalizeProfileVault(parsed);
-  if (!vault.profiles.length) throw new Error("The selected file does not contain any valid drone profiles.");
-  return vault;
+export function importProfileVault(serialized: string): ProfileVault {
+  return normalizeProfileVault(JSON.parse(serialized));
 }
 
 export function mergeProfileVault(current: ProfileVault, incoming: ProfileVault): ProfileVault {
   const next = clone(current);
-  const byId = new Map(next.profiles.map((item) => [item.id, item]));
-  incoming.profiles.forEach((item) => byId.set(item.id, item));
-  const profiles = Array.from(byId.values()).sort((a, b) => {
-    const af = a.favorite ? 1 : 0;
-    const bf = b.favorite ? 1 : 0;
-    return bf - af || +new Date(b.updatedAt) - +new Date(a.updatedAt);
-  });
-  const activeId = incoming.activeId && byId.has(incoming.activeId) ? incoming.activeId : next.activeId;
-  return normalizeProfileVault({ schema: PROFILE_VAULT_SCHEMA, activeId, profiles });
+  const existingIds = new Set(next.profiles.map((item) => item.id));
+  for (const profile of incoming.profiles) if (!existingIds.has(profile.id)) next.profiles.push(clone(profile));
+  if (!next.activeId && incoming.activeId) next.activeId = incoming.activeId;
+  return normalizeProfileVault(next);
 }
