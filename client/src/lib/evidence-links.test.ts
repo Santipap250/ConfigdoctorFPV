@@ -15,8 +15,8 @@ describe("assessProfileEvidence", () => {
     expect(assessProfileEvidence(profile, seedEvidence).find((check) => check.id === "prop-evidence")?.status).toBe("MATCHED");
   });
 
-  it("marks a linked motor evidence record as critical when the profile battery is outside the documented source range", () => {
-    const profile = { ...defaultProfile, batteryCells: 4, motor: "F60 PRO V", motorKv: 1950, motorEvidenceId: "motor-tmotor-f60prov-2207-5-kv1950" };
+  it("flags a linked motor evidence record when the profile battery is outside the documented source range", () => {
+    const profile = { ...defaultProfile, batteryCells: 7, motor: "F60 PRO V", motorKv: 1950, motorEvidenceId: "motor-tmotor-f60prov-2207-5-kv1950" };
     const batteryCheck = assessProfileEvidence(profile, seedEvidence).find((check) => check.id === "motor-battery");
     expect(batteryCheck?.level).toBe("critical");
     expect(batteryCheck?.status).toBe("OUTSIDE SOURCE RANGE");

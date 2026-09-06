@@ -131,6 +131,20 @@ describe("validateEvidenceEntry", () => {
     expect(fields).toEqual(expect.arrayContaining(["provenanceRecord.reviewedBy", "provenanceRecord.changeNote"]));
   });
 
+  it("accepts structured compatibility claims when the values are positive", () => {
+    const motor = { ...validMotor, matchingFrameInch: 5 };
+    const prop = { ...validProp, adaptiveMotorStatorMin: 2207, adaptiveMotorStatorMax: 2306 };
+    expect(isEvidenceEntryValid(motor)).toBe(true);
+    expect(isEvidenceEntryValid(prop)).toBe(true);
+  });
+
+  it("rejects non-positive structured compatibility claims", () => {
+    const motor = { ...validMotor, matchingFrameInch: 0 };
+    const prop = { ...validProp, adaptiveMotorStatorMin: 0, adaptiveMotorStatorMax: 2306 };
+    expect(isEvidenceEntryValid(motor)).toBe(false);
+    expect(isEvidenceEntryValid(prop)).toBe(false);
+  });
+
   it("rejects an entry missing manufacturer or model", () => {
     expect(isEvidenceEntryValid({ ...validMotor, manufacturer: "" })).toBe(false);
     expect(isEvidenceEntryValid({ ...validMotor, model: "  " })).toBe(false);
