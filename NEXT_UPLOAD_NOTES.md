@@ -18,7 +18,7 @@ Upload this source tree to GitHub repository `Santipap250/ConfigdoctorFPV` using
 - Added Command Palette search filtering and Escape-key close behavior.
 - Made the rail Settings button open the Command Palette instead of being inert.
 - Shows a short source snapshot SHA-256 fingerprint in the Evidence Table.
-- Bumped package version to 1.2.0.
+- Bumped package version to 1.3.0 for Phase 3.
 
 ## Important hash note
 
@@ -40,3 +40,7 @@ Not run here:
 - Playwright E2E
 
 Reason: the preparation environment could not reach `registry.npmjs.org` and does not have the repository dependencies installed. GitHub Actions should remain the authoritative CI gate after the files are pushed through the repository's protected PR flow.
+
+## Phase 3 — evidence-based compatibility
+
+Added a single deterministic compatibility engine. It evaluates only explicitly linked motor/prop evidence and structured source claims for battery-cell range, frame size, and motor-class compatibility. Unknown evidence remains unknown; no compatibility is inferred from missing data.

@@ -32,6 +32,10 @@ Every push to `main` and every pull request runs the GitHub Actions quality gate
 
 Run the same checks locally with `pnpm check`, `pnpm exec vitest run`, `pnpm build`, and `pnpm exec playwright test`. Browser form feedback marks invalid fields with `aria-invalid`, shows an inline explanation, and identifies whether a value is entered, estimated, or measured evidence.
 
+## Phase 3 — evidence-based compatibility
+
+The compatibility engine evaluates only explicitly linked motor/prop evidence and structured manufacturer claims captured in those records. It can report a documented match, partial/review state, or an explicit outside-source-range condition. Unknown data remains unknown; the engine does not infer compatibility from missing evidence.
+
 ## Evidence provenance contract
 
 Motor and propeller rows are shown only when they have a checkable HTTP(S) source and a valid `provenanceRecord`. Each record carries `schemaVersion`, `recordedAt`, `lastReviewedAt`, `reviewedBy`, and a `changeNote`. The UI exposes the provenance version and review date so a future source refresh can be audited without silently overwriting the evidence history. A missing or unsupported provenance record is rejected by the domain sanitizer and never reaches the table.
