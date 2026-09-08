@@ -219,6 +219,19 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|wouter)([\\/]|$)/.test(id)) return "vendor-react";
+          if (id.includes("/node_modules/@radix-ui/")) return "vendor-ui";
+          if (/[\\/]node_modules[\\/](recharts|d3-)([^\\/]*)/.test(id)) return "vendor-charts";
+          if (/[\\/]node_modules[\\/](framer-motion|motion)([\\/]|$)/.test(id)) return "vendor-motion";
+          if (/[\\/]node_modules[\\/](lucide-react)([\\/]|$)/.test(id)) return "vendor-icons";
+          return "vendor-deps";
+        },
+      },
+    },
   },
   server: {
     port: 3000,
